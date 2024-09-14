@@ -23,7 +23,10 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String[] command = {"ssh", "-t", "-i", "~/.ssh/webserver.pem", "ubuntu@18.182.42.57", "sudo docker exec -it pusheventtest bash"};
+        String[] command = {
+            "ssh", "-t", "-o", "LogLevel=QUIET", "-i", "~/.ssh/webserver.pem", "ubuntu@18.182.42.57",
+            "sudo docker exec -it pusheventtest bash",
+        };
         process = new PtyProcessBuilder(command).start();
         outputStream = process.getOutputStream();
         InputStream inputStream = process.getInputStream();
