@@ -15,22 +15,23 @@
 
 
   term.onData(function(data) {
-    if (data === '\r') {  // 偵測 Enter 鍵（回車鍵）
-      // 當使用者按下 Enter 時，將完整的命令發送到後端
-      socket.send(commandBuffer);
-      term.write('\r\n');  // 顯示新的一行
-      commandBuffer = '';      // 清空緩衝區
-    } else if (data === '\u007F') {  // 偵測 Backspace 鍵
-      // 處理刪除字符的行為
-      if (commandBuffer.length > 0) {
-        commandBuffer = commandBuffer.slice(0, -1);
-        term.write('\b \b');  // 在終端上刪除最後一個字符
-      }
-    } else {
-      // 將輸入的字符添加到緩衝區中
-      commandBuffer += data;
-      term.write(data);  // 在終端上顯示用戶的輸入
-    }
+    // if (data === '\r') {  // 偵測 Enter 鍵（回車鍵）
+    //   // 當使用者按下 Enter 時，將完整的命令發送到後端
+    //   socket.send(commandBuffer);
+    //   term.write('\r\n');  // 顯示新的一行
+    //   commandBuffer = '';      // 清空緩衝區
+    // } else if (data === '\u007F') {  // 偵測 Backspace 鍵
+    //   // 處理刪除字符的行為
+    //   if (commandBuffer.length > 0) {
+    //     commandBuffer = commandBuffer.slice(0, -1);
+    //     term.write('\b \b');  // 在終端上刪除最後一個字符
+    //   }
+    // } else {
+    //   // 將輸入的字符添加到緩衝區中
+    //   commandBuffer += data;
+    //   term.write(data);  // 在終端上顯示用戶的輸入
+    // }
+    socket.send(data);
   });
 
   socket.onmessage = (event) => {

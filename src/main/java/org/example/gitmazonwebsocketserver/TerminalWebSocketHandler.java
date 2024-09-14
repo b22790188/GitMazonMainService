@@ -2,6 +2,8 @@ package org.example.gitmazonwebsocketserver;
 
 import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -15,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TerminalWebSocketHandler extends TextWebSocketHandler {
+    private static final Logger log = LogManager.getLogger(TerminalWebSocketHandler.class);
     private PtyProcess process;
     private OutputStream outputStream;
     private ExecutorService outputExecutor;
@@ -26,7 +29,8 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         outputStream = process.getOutputStream();
         InputStream inputStream = process.getInputStream();
 
-        // 使用單獨的線程來處理標準輸出並發送回 WebSocket
+
+        // using single thread to send data back to frontend
         outputExecutor = Executors.newSingleThreadExecutor();
         outputExecutor.submit(() -> {
             try {
@@ -44,7 +48,7 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String input = message.getPayload();
-        outputStream.write((input + "\n").getBytes(StandardCharsets.UTF_8));
+        outputStream.write(input.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
     }
 
