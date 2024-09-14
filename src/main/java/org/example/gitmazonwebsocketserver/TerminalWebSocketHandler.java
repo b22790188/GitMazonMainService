@@ -17,14 +17,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TerminalWebSocketHandler extends TextWebSocketHandler {
-    private static final Logger log = LogManager.getLogger(TerminalWebSocketHandler.class);
     private PtyProcess process;
     private OutputStream outputStream;
     private ExecutorService outputExecutor;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String[] command = {"ssh", "-i", "~/.ssh/webserver.pem", "ubuntu@18.182.42.57"};
+        String[] command = {"ssh", "-t", "-i", "~/.ssh/webserver.pem", "ubuntu@18.182.42.57", "sudo docker exec -it pusheventtest bash"};
         process = new PtyProcessBuilder(command).start();
         outputStream = process.getOutputStream();
         InputStream inputStream = process.getInputStream();
