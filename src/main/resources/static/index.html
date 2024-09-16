@@ -1,50 +1,55 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
-  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
-  <style>
-    /* 隱藏終端視窗，按下按鈕後才顯示 */
-    #terminal {
-      display: none;
-      height: 400px; /* 終端視窗高度 */
-      width: 100%;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>GitMazon</title>
 </head>
 <body>
-<!-- 用戶輸入欄位 -->
-<div>
-  <button id="sshButton">SSH</button>
-</div>
+  <h1> Create Service</h1>
+  <form id="serviceForm">
+    <label for="username">Username:</label><br>
+    <input type="text" id="username" name="username" required><br><br>
 
-<!-- 終端顯示區 -->
-<div id="terminal"></div>
+    <label for="serviceName">Service Name:</label><br>
+    <input type="text" id="serviceName" name="serviceName" required><br><br>
 
+    <label for="repoUrl">GitHub Repo URL:</label><br>
+    <input type="url" id="repoUrl" name="repoUrl" required><br><br>
+
+    <input type="submit" value="提交">
+  </form>
+
+  <p id="result"></p>
+</body>
 <script>
-  //create terminal
-  const term = new Terminal();
+  document.getElementById("serviceForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
 
-  //start websocket
-  document.getElementById('sshButton').addEventListener('click', function() {
+    const username = document.getElementById("username").value;
+    const serviceName = document.getElementById("serviceName").value;
+    const repoUrl = document.getElementById("repoUrl").value;
 
-    document.getElementById('terminal').style.display = 'block';
-    term.open(document.getElementById('terminal'));
-
-    const socket = new WebSocket(`ws://${window.location.host}/terminal`);
-
-    term.onData(function(data) {
-      socket.send(data);
-    });
-
-    socket.onmessage = (event) => {
-      term.write(event.data);
+    const requestData = {
+      username: username,
+      serviceName: serviceName,
+      repoUrl: repoUrl
     };
 
-    socket.onerror = (error) => {
-      console.error("WebSocket error: ", error);
-    };
+    try {
+      const response = await fetch("http://localhost:8082/registerService", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      const data = await response.json();
+      document.getElementById("result").innerText = `您的服務網址是 ${data.serviceUrl}，並會在幾分鐘之內啟動。`;
+    } catch (error) {
+      console.error("Error:", error);
+      document.getElementById("result").innerText = "註冊失敗，請重試。";
+    }
   });
 </script>
-</body>
 </html>

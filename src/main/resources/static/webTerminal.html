@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <style>
+    /* 隱藏終端視窗，按下按鈕後才顯示 */
+    #terminal {
+      display: none;
+      height: 400px; /* 終端視窗高度 */
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+<!-- 用戶輸入欄位 -->
+<div>
+  <button id="sshButton">SSH</button>
+</div>
+
+<!-- 終端顯示區 -->
+<div id="terminal"></div>
+
+<script>
+  //create terminal
+  const term = new Terminal();
+
+  //start websocket
+  document.getElementById('sshButton').addEventListener('click', function() {
+
+    document.getElementById('terminal').style.display = 'block';
+    term.open(document.getElementById('terminal'));
+
+    const socket = new WebSocket(`ws://${window.location.host}/terminal`);
+
+    term.onData(function(data) {
+      socket.send(data);
+    });
+
+    socket.onmessage = (event) => {
+      term.write(event.data);
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error: ", error);
+    };
+  });
+</script>
+</body>
+</html>
