@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -19,20 +19,24 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Log4j2
+@Component
 public class TerminalWebSocketHandler extends TextWebSocketHandler {
+
+    @Value("${masterNode.host}")
+    private String masterNodeHost;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         log.info("Connection established");
 
         //get data from backend
-        String apiUrl = "http://localhost:8082/info?username=guo";
+        String apiUrl = "http://" + masterNodeHost + "/info?username=b22790188&serviceName=GitMazonWebsocketServer";
+        log.info(apiUrl);
         String response = fetchPodInfo(apiUrl);
         Map<String, String> podInfo = new ObjectMapper().readValue(response, Map.class);
 
@@ -136,11 +140,11 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         PtyProcess process = (PtyProcess) session.getAttributes().get("process");
         ExecutorService outputExecutor = (ExecutorService) session.getAttributes().get("outputExecutor");
 
-        if(process != null) {
+        if (process != null) {
             process.destroy();
         }
 
-        if(outputExecutor != null) {
+        if (outputExecutor != null) {
             outputExecutor.shutdown();
         }
     }
