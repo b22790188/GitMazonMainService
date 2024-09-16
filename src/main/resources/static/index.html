@@ -5,8 +5,8 @@
     <title>GitMazon</title>
 </head>
 <body>
-  <h1> Create Service</h1>
-  <form id="serviceForm">
+<h1> Create Service</h1>
+<form id="serviceForm">
     <label for="username">Username:</label><br>
     <input type="text" id="username" name="username" required><br><br>
 
@@ -17,39 +17,39 @@
     <input type="url" id="repoUrl" name="repoUrl" required><br><br>
 
     <input type="submit" value="提交">
-  </form>
+</form>
 
-  <p id="result"></p>
+<p id="result"></p>
 </body>
 <script>
-  document.getElementById("serviceForm").addEventListener("submit", async function(event) {
-    event.preventDefault();
+    document.getElementById("serviceForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
 
-    const username = document.getElementById("username").value;
-    const serviceName = document.getElementById("serviceName").value;
-    const repoUrl = document.getElementById("repoUrl").value;
+        const username = document.getElementById("username").value;
+        const serviceName = document.getElementById("serviceName").value;
+        const repoUrl = document.getElementById("repoUrl").value;
 
-    const requestData = {
-      username: username,
-      serviceName: serviceName,
-      repoUrl: repoUrl
-    };
+        const requestData = {
+            username: username,
+            serviceName: serviceName,
+            repoUrl: repoUrl
+        };
 
-    try {
-      const response = await fetch("http://localhost:8082/registerService", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestData)
-      });
+        try {
+            const response = await fetch("http://localhost:8082/registerService", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(requestData)
+            });
 
-      const data = await response.json();
-      document.getElementById("result").innerText = `您的服務網址是 ${data.serviceUrl}，並會在幾分鐘之內啟動。`;
-    } catch (error) {
-      console.error("Error:", error);
-      document.getElementById("result").innerText = "註冊失敗，請重試。";
-    }
-  });
+            const data = await response.json();
+            document.getElementById("result").innerText = `您的服務網址是 ${data.serviceUrl}，並會在幾分鐘之內啟動。`;
+        } catch (error) {
+            console.error("Error:", error);
+            document.getElementById("result").innerText = "註冊失敗，請重試。";
+        }
+    });
 </script>
 </html>
