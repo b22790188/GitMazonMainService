@@ -22,39 +22,25 @@
 <div id="terminal"></div>
 
 <script>
-  // 創建終端實例
+  //create terminal
   const term = new Terminal();
 
-  // 當按鈕被點擊時顯示終端並連接 WebSocket
+  //start websocket
   document.getElementById('sshButton').addEventListener('click', function() {
 
-    // 顯示終端視窗
     document.getElementById('terminal').style.display = 'block';
     term.open(document.getElementById('terminal'));
 
-    // 建立 WebSocket 連線
     const socket = new WebSocket(`ws://${window.location.host}/terminal`);
 
-    // 當 WebSocket 連線建立後，發送初始消息
-    socket.onopen = () => {
-      const initMessage = JSON.stringify({
-        ip: '18.182.42.57',
-        container: "pusheventtest" // 這裡可以根據需求改成動態的
-      });
-      socket.send(initMessage);
-    };
-
-    // 處理終端輸入
     term.onData(function(data) {
       socket.send(data);
     });
 
-    // 處理 WebSocket 消息，顯示在終端
     socket.onmessage = (event) => {
       term.write(event.data);
     };
 
-    // 錯誤處理
     socket.onerror = (error) => {
       console.error("WebSocket error: ", error);
     };
