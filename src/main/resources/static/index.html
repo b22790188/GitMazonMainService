@@ -3,24 +3,62 @@
 <head>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
   <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <style>
+    /* 隱藏終端視窗，按下按鈕後才顯示 */
+    #terminal {
+      display: none;
+      height: 400px; /* 終端視窗高度 */
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
+<!-- 用戶輸入欄位 -->
+<div>
+  <button id="sshButton">SSH</button>
+</div>
+
+<!-- 終端顯示區 -->
 <div id="terminal"></div>
+
 <script>
+  // 創建終端實例
   const term = new Terminal();
-  term.open(document.getElementById('terminal'));
 
-  const socket = new WebSocket(`ws://${window.location.host}/terminal`);
+  // 當按鈕被點擊時顯示終端並連接 WebSocket
+  document.getElementById('sshButton').addEventListener('click', function() {
 
-  term.onData(function(data) {
+    // 顯示終端視窗
+    document.getElementById('terminal').style.display = 'block';
+    term.open(document.getElementById('terminal'));
 
-    socket.send(data);
+    // 建立 WebSocket 連線
+    const socket = new WebSocket(`ws://${window.location.host}/terminal`);
+
+    // 當 WebSocket 連線建立後，發送初始消息
+    socket.onopen = () => {
+      const initMessage = JSON.stringify({
+        ip: '18.182.42.57',
+        container: "pusheventtest" // 這裡可以根據需求改成動態的
+      });
+      socket.send(initMessage);
+    };
+
+    // 處理終端輸入
+    term.onData(function(data) {
+      socket.send(data);
+    });
+
+    // 處理 WebSocket 消息，顯示在終端
+    socket.onmessage = (event) => {
+      term.write(event.data);
+    };
+
+    // 錯誤處理
+    socket.onerror = (error) => {
+      console.error("WebSocket error: ", error);
+    };
   });
-
-  socket.onmessage = (event) => {
-    //wirte backend data to terminal
-    term.write(event.data);
-  }
 </script>
 </body>
 </html>
