@@ -10,6 +10,8 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,8 +36,12 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         log.info("Connection established");
 
+        UriComponents uriComponents = UriComponentsBuilder.fromUri(session.getUri()).build();
+        String username = uriComponents.getQueryParams().getFirst("username");
+        String serviceName = uriComponents.getQueryParams().getFirst("serviceName");
+
         //get data from backend
-        String apiUrl = "http://" + masterNodeHost + "/info?username=b22790188&serviceName=GitMazonWebsocketServer";
+        String apiUrl = "http://" + masterNodeHost + "/info?username=" + username + "&serviceName=" + serviceName;
         log.info(apiUrl);
         String response = fetchPodInfo(apiUrl);
         Map<String, String> podInfo = new ObjectMapper().readValue(response, Map.class);
@@ -74,55 +80,6 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-//        if (!session.getAttributes().containsKey("process")) {
-//
-//            // get instance info from master node server
-//            String apiUrl = "http://localhost:8082/info?username=guo";
-//            String response = fetchPodInfo(apiUrl);
-//            Map<String, String> podInfo = new ObjectMapper().readValue(response, Map.class);
-//
-//            String ip = podInfo.get("podIP");
-//            String container = podInfo.get("container");
-//
-//            log.info("Received initialization params - IP: " + ip + ", Container: " + container);
-//
-//            // create ssh command
-//            String[] command = {
-//                "ssh", "-t", "-o", "LogLevel=QUIET", "-i", "~/.ssh/webserver.pem", "ubuntu@" + ip,
-//                "sudo docker exec -it " + container + " bash"
-//            };
-//            PtyProcess process = new PtyProcessBuilder(command).start();
-//            InputStream inputStream = process.getInputStream();
-//
-//            // get inputstream data and send it to frontend
-//            ExecutorService outputExecutor = Executors.newSingleThreadExecutor();
-//            outputExecutor.submit(() -> {
-//                try {
-//                    byte[] buffer = new byte[1024];
-//                    int bytesRead;
-//                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-//                        session.sendMessage(new TextMessage(new String(buffer, 0, bytesRead, StandardCharsets.UTF_8)));
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            });
-//
-//            session.getAttributes().put("process", process);
-//            session.getAttributes().put("outputExecutor", outputExecutor);
-//
-//        } else {
-//            PtyProcess process = (PtyProcess) session.getAttributes().get("process");
-//
-//            if (process != null) {
-//                OutputStream outputStream = process.getOutputStream();
-//                String input = message.getPayload();
-//                outputStream.write(input.getBytes(StandardCharsets.UTF_8));
-//                outputStream.flush();
-//            } else {
-//                log.error("Pty Process not found for session" + session.getId());
-//            }
-//        }
         PtyProcess process = (PtyProcess) session.getAttributes().get("process");
 
         if (process != null) {
