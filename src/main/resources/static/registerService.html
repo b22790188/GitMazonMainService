@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GitMazon</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"/>
+</head>
+<body>
+<h1> Create Service</h1>
+<form id="serviceForm">
+    <label for="username">Username:</label><br>
+    <input type="text" id="username" name="username" required><br><br>
+
+    <label for="serviceName">Service Name:</label><br>
+    <input type="text" id="serviceName" name="serviceName" required><br><br>
+
+    <label for="repoUrl">GitHub Repo URL:</label><br>
+    <input type="url" id="repoUrl" name="repoUrl" required><br><br>
+
+    <input type="submit" value="提交">
+</form>
+
+<p id="result"></p>
+
+<!-- 服務列表 -->
+<h2>您的服務列表</h2>
+<div id="serviceList">
+    <!-- 這裡會動態填入服務項目 -->
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+<script>
+    document.getElementById("serviceForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const serviceName = document.getElementById("serviceName").value;
+        const repoUrl = document.getElementById("repoUrl").value;
+
+        const requestData = {
+            username: username,
+            serviceName: serviceName,
+            repoUrl: repoUrl
+        };
+
+        try {
+            const response = await fetch("http://54.250.164.170:8082/registerService", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            const data = await response.json();
+            document.getElementById("result").innerText = `您的服務網址是 ${data.serviceUrl}，並會在幾分鐘之內啟動。`;
+
+            // 將服務新增到列表中
+            addServiceToList(data.serviceUrl, username, serviceName);
+
+        } catch (error) {
+            console.error("Error:", error);
+            document.getElementById("result").innerText = "註冊失敗，請重試。";
+        }
+    });
+
+    // 將服務添加到服務列表
+    function addServiceToList(serviceUrl, username, serviceName) {
+        const serviceList = document.getElementById("serviceList");
+
+        const serviceItem = document.createElement("div");
+        serviceItem.innerHTML = `
+            <p>服務網址: ${serviceUrl} (${username}/${serviceName})</p>
+            <button class="sshButton" data-username="${username}" data-service-name="${serviceName}">SSH</button>
+            <div class="terminal-container" style="display:none;">
+                <div id="terminal-${username}-${serviceName}" style="height: 400px; width: 100%;"></div>
+            </div>
+        `;
+        serviceList.appendChild(serviceItem);
+
+        // 為 SSH 按鈕綁定點擊事件
+        serviceItem.querySelector(".sshButton").addEventListener("click", function () {
+            const terminalContainer = serviceItem.querySelector(".terminal-container");
+            terminalContainer.style.display = 'block'; // 顯示終端
+
+            const terminalElement = terminalContainer.querySelector(`#terminal-${username}-${serviceName}`);
+            openWebTerminal(terminalElement, username, serviceName);
+        });
+    }
+
+    // 開啟 Web Terminal
+    function openWebTerminal(terminalElement, username, serviceName) {
+        const term = new Terminal();
+        term.open(terminalElement);
+
+        // 建立 WebSocket 連線
+        const socket = new WebSocket(`ws://${window.location.host}/terminal?username=${username}&serviceName=${serviceName}`);
+
+        term.onData(function (data) {
+            socket.send(data);
+        });
+
+        socket.onmessage = (event) => {
+            term.write(event.data);
+        };
+
+        socket.onerror = (error) => {
+            console.error("WebSocket error: ", error);
+        };
+    }
+</script>
+</body>
+</html>
