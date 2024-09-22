@@ -38,11 +38,11 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
 
         UriComponents uriComponents = UriComponentsBuilder.fromUri(session.getUri()).build();
         String username = uriComponents.getQueryParams().getFirst("username");
-        String serviceName = uriComponents.getQueryParams().getFirst("serviceName");
+        String repoName = uriComponents.getQueryParams().getFirst("repoName");
 
         //todo: change parameter from serviceName to repoName
         //get data from backend
-        String apiUrl = "http://" + masterNodeHost + "/info?username=" + username + "&serviceName=" + serviceName;
+        String apiUrl = "http://" + masterNodeHost + "/info?username=" + username + "&repoName=" + repoName;
         log.info(apiUrl);
         String response = fetchPodInfo(apiUrl);
         Map<String, String> podInfo = new ObjectMapper().readValue(response, Map.class);
