@@ -4,32 +4,76 @@
     <meta charset="UTF-8">
     <title>GitMazon</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h1> Create Service</h1>
-<form id="serviceForm">
-    <label for="username">Username:</label><br>
-    <input type="text" id="username" name="username" required><br><br>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">GitMazon</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#">首頁</a>
+                </li>
+            </ul>
+            <span class="navbar-text me-3">
+                <a href="services.html?username=" id="serviceLink" class="text-light">我的服務</a>
+            </span>
+            <span id="navbarUsername" class="navbar-text text-light">使用者名稱</span>
+        </div>
+    </div>
+</nav>
 
-    <label for="serviceName">Service Name:</label><br>
-    <input type="text" id="serviceName" name="serviceName" required><br><br>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <h1>Create Service</h1>
+        </div>
+    </div>
+    <div class="row justify-content-center mt-3">
+        <div class="col-md-6">
+            <form id="serviceForm" class="mb-4">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username:</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="serviceName" class="form-label">Service Name:</label>
+                    <input type="text" class="form-control" id="serviceName" name="serviceName" required>
+                </div>
+                <div class="mb-3">
+                    <label for="repoUrl" class="form-label">GitHub Repo URL:</label>
+                    <input type="url" class="form-control" id="repoUrl" name="repoUrl" required>
+                </div>
+                <input type="submit" class="btn btn-primary btn-block" value="提交">
+            </form>
 
-    <label for="repoUrl">GitHub Repo URL:</label><br>
-    <input type="url" id="repoUrl" name="repoUrl" required><br><br>
-
-    <input type="submit" value="提交">
-</form>
-
-<p id="result"></p>
-
-<!-- 服務列表 -->
-<h2>您的服務列表</h2>
-<div id="serviceList">
-    <!-- 這裡會動態填入服務項目 -->
+            <p id="result"></p>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+
+    //Get jwt token from backend
+    document.addEventListener('DOMContentLoaded', async function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        if (username) {
+            document.getElementById("navbarUsername").innerText = username;
+            document.getElementById("serviceLink").href = `services.html?username=${username}`;
+            await getJwtToken(username);
+        }
+    });
+
     document.getElementById("serviceForm").addEventListener("submit", async function (event) {
         event.preventDefault();
 
@@ -43,11 +87,13 @@
             repoUrl: repoUrl
         };
 
+        const jwtToken = localStorage.getItem('jwtToken');
         try {
             const response = await fetch("http://52.69.33.14:8082/registerService", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${jwtToken}`
                 },
                 body: JSON.stringify(requestData)
             });
@@ -55,78 +101,22 @@
             const data = await response.json();
             document.getElementById("result").innerText = `您的服務網址是 ${data.serviceUrl}，並會在幾分鐘之內啟動。`;
 
-            await fetchUserServices(username);
-
         } catch (error) {
             console.error("Error:", error);
             document.getElementById("result").innerText = "註冊失敗，請重試。";
         }
     });
 
-    function addServiceToList(username, serviceName, repoName, endpoint) {
-        const serviceList = document.getElementById("serviceList");
-
-        const serviceItem = document.createElement("div");
-        serviceItem.innerHTML = `
-        <p><strong>使用者名稱:</strong> ${username}</p>
-        <p><strong>服務名稱:</strong> ${serviceName}</p>
-        <p><strong>Repo 名稱:</strong> ${repoName}</p>
-        <p><strong>服務網址:</strong> ${endpoint}</p>
-        <button class="sshButton" data-username="${username}" data-service-name="${serviceName}" data-repo-name="${repoName}">SSH</button>
-        <div class="terminal-container" style="display:none;">
-            <div id="terminal-${username}-${serviceName}" style="height: 400px; width: 100%;"></div>
-        </div>
-    `;
-        serviceList.appendChild(serviceItem);
-
-
-        // Bind ssh button to
-        serviceItem.querySelector(".sshButton").addEventListener("click", function () {
-            const terminalContainer = serviceItem.querySelector(".terminal-container");
-            terminalContainer.style.display = 'block';
-
-            const terminalElement = terminalContainer.querySelector(`#terminal-${username}-${serviceName}`);
-            openWebTerminal(terminalElement, username, repoName);
-        });
-    }
-
-
-    function openWebTerminal(terminalElement, username, repoName) {
-        const term = new Terminal();
-        term.open(terminalElement);
-
-        const socket = new WebSocket(`ws://${window.location.host}/terminal?username=${username}&repoName=${repoName}`);
-
-        term.onData(function (data) {
-            socket.send(data);
-        });
-
-        socket.onmessage = (event) => {
-            term.write(event.data);
-        };
-
-        socket.onerror = (error) => {
-            console.error("WebSocket error: ", error);
-        };
-    }
-
-    async function fetchUserServices(username) {
+    async function getJwtToken(username) {
         try {
-            const response = await fetch(`http://52.69.33.14:8082/userService?username=${username}`);
-            const services = await response.json();
-
-            const serviceList = document.getElementById("serviceList");
-            serviceList.innerHTML = "";
-
-            services.forEach(service => {
-                addServiceToList(service.username, service.serviceName, service.repoName, service.endpoint);
-            });
+            const response = await fetch(`http://52.69.33.14:8082/generateJwtToken?username=${username}`);
+            const jwtToken = await response.text();
+            localStorage.setItem('jwtToken', jwtToken);
+            console.log('JWT Token stored in localStorage');
         } catch (error) {
-            console.error("Error fetching services:", error);
+            console.error('Error generating JWT Token:', error);
         }
     }
-
-
 </script>
 </body>
 </html>
