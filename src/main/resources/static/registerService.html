@@ -51,7 +51,7 @@
                     <label for="repoUrl" class="form-label">GitHub Repo URL:</label>
                     <input type="url" class="form-control" id="repoUrl" name="repoUrl" required>
                 </div>
-                <input type="submit" class="btn btn-primary btn-block" value="提交">
+                <input type="submit" class="btn btn-primary btn-block" value="註冊">
             </form>
 
             <p id="result"></p>
@@ -89,7 +89,8 @@
 
         const jwtToken = localStorage.getItem('jwtToken');
         try {
-            const response = await fetch("http://52.69.33.14:8082/registerService", {
+            // const response = await fetch("http://52.69.33.14:8082/registerService", {
+            const response = await fetch("http://localhost:8082/registerService", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -109,7 +110,8 @@
 
     async function getJwtToken(username) {
         try {
-            const response = await fetch(`http://52.69.33.14:8082/generateJwtToken?username=${username}`);
+            // const response = await fetch(`http://52.69.33.14:8082/generateJwtToken?username=${username}`);
+            const response = await fetch(`http://localhost:8082/generateJwtToken?username=${username}`);
             const jwtToken = await response.text();
             localStorage.setItem('jwtToken', jwtToken);
             console.log('JWT Token stored in localStorage');
