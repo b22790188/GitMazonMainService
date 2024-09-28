@@ -5,6 +5,18 @@
     <title>My Services</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"/>
+    <style>
+        /* 資源顯示區域樣式 */
+        .resource-stats {
+            border-left: 1px solid #ccc;
+            padding-left: 20px;
+            color: #333;
+        }
+
+        .resource-stats p {
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
 <!-- Navbar -->
@@ -43,13 +55,15 @@
 <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
 <script>
 
-    //todo: using jwt to fetch username from server
+    // todo: using jwt to fetch username from server
     document.addEventListener('DOMContentLoaded', async function () {
         const urlParams = new URLSearchParams(window.location.search);
         const username = urlParams.get('username');
         if (username) {
             document.getElementById("navbarUsername").innerText = username;
             await fetchUserServices(username);
+
+            setupResourceWebSocket(username);
         }
     });
 
@@ -71,19 +85,47 @@
                     <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
                     <p><strong>服務網址:</strong> ${service.endpoint}</p>
                 </div>
+                <div class="resource-stats" id="stats-${service.containerName}">
+                    <p><strong>CPU:</strong> <span id="cpu-${service.containerName}">-</span></p>
+                    <p><strong>RAM:</strong> <span id="ram-${service.containerName}">-</span></p>
+                </div>
                 <button class="sshButton btn btn-secondary" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
             `;
                 serviceList.appendChild(serviceItem);
 
                 // 綁定 SSH 按鈕
                 serviceItem.querySelector(".sshButton").addEventListener("click", function () {
-                    const repoName = service.repoName;
-                    openWebTerminal(service.username, repoName);
+                    openWebTerminal(service.username, service.repoName);
                 });
             });
         } catch (error) {
             console.error("Error fetching services:", error);
         }
+    }
+
+    function setupResourceWebSocket(username) {
+        // 建立一次 WebSocket 連接
+        const socket = new WebSocket(`ws://13.231.5.244:8080/monitor?username=${username}`);
+
+        // 當接收到訊息時更新對應的服務狀態
+        socket.onmessage = function (event) {
+            const message = event.data;
+
+            // 假設訊息格式: "containerName: CPU X%, RAM Y"
+            const parts = message.split(": ");
+            const containerName = parts[0]; // 取得容器名稱
+            const stats = parts[1].split(", ");
+            const cpu = stats[0].split(" ")[1]; // 取得 CPU 使用量
+            const ram = stats[1].split(" ")[1]; // 取得 RAM 使用量
+
+            // 使用容器名稱來定位對應的元素並更新
+            document.getElementById(`cpu-${containerName}`).textContent = cpu;
+            document.getElementById(`ram-${containerName}`).textContent = ram;
+        };
+
+        socket.onerror = function (error) {
+            console.error("WebSocket error:", error);
+        };
     }
 
     function openWebTerminal(username, repoName) {
@@ -107,9 +149,10 @@
         };
 
         socket.onerror = (error) => {
-            console.error("WebSocket error: ", error);
+            console.error("WebSocket error:", error);
         };
     }
+
 </script>
 </body>
 </html>
