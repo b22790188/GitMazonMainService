@@ -32,6 +32,12 @@
                 <li class="nav-item">
                     <a class="nav-link" href="index.html">首頁</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="registerService.html">註冊服務</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="services.html?username=" id="serviceLink">我的服務</a>
+                </li>
             </ul>
             <span id="navbarUsername" class="navbar-text text-light"></span>
         </div>
@@ -57,13 +63,38 @@
 
     // todo: using jwt to fetch username from server
     document.addEventListener('DOMContentLoaded', async function () {
-        const urlParams = new URLSearchParams(window.location.search);
-        const username = urlParams.get('username');
-        if (username) {
-            document.getElementById("navbarUsername").innerText = username;
-            await fetchUserServices(username);
+        // const urlParams = new URLSearchParams(window.location.search);
+        // const username = urlParams.get('username');
+        // if (username) {
+        //     document.getElementById("navbarUsername").innerText = username;
+        //     await fetchUserServices(username);
+        //
+        //     setupResourceWebSocket(username);
+        // }
+        const jwtToken = localStorage.getItem('jwtToken');
+        if (jwtToken) {
+            try {
+                const response = await fetch('http://52.69.33.14:8082/user', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}` // 使用 JWT token 作為 Authorization
+                    }
+                });
 
-            setupResourceWebSocket(username);
+                if (response.ok) {
+                    const userData = await response.json();
+                    const username = userData.username; // 假設後端返回的資料包含 username
+                    document.getElementById("navbarUsername").innerText = username;
+                    await fetchUserServices(username); // 使用取得的 username 來請求服務
+                    setupResourceWebSocket(username);
+                } else {
+                    console.error('Failed to fetch user information');
+                }
+            } catch (error) {
+                console.error('Error fetching user information:', error);
+            }
+        } else {
+            console.error('JWT token not found');
         }
     });
 

@@ -19,12 +19,18 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="index.html">首頁</a>
+                    <a class="nav-link " aria-current="page" href="index.html">首頁</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="registerService.html">註冊服務</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="services.html?username=" id="serviceLink">我的服務</a>
                 </li>
             </ul>
-            <span class="navbar-text me-3">
-                <a href="services.html?username=" id="serviceLink" class="text-light">我的服務</a>
-            </span>
+            <!--            <span class="navbar-text me-3">-->
+            <!--                <a href="services.html?username=" id="serviceLink" class="text-light">我的服務</a>-->
+            <!--            </span>-->
             <span id="navbarUsername" class="navbar-text text-light">使用者名稱</span>
         </div>
     </div>
@@ -39,10 +45,6 @@
     <div class="row justify-content-center mt-3">
         <div class="col-md-6">
             <form id="serviceForm" class="mb-4">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username:</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
-                </div>
                 <div class="mb-3">
                     <label for="serviceName" class="form-label">Service Name:</label>
                     <input type="text" class="form-control" id="serviceName" name="serviceName" required>
@@ -85,7 +87,7 @@
     document.getElementById("serviceForm").addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        const username = document.getElementById("username").value;
+        const username = document.getElementById("navbarUsername").innerText;
         const serviceName = document.getElementById("serviceName").value;
         const repoUrl = document.getElementById("repoUrl").value;
         const resourceConfig = document.getElementById("resourceConfig").value.split(',');
