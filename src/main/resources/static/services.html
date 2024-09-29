@@ -16,6 +16,24 @@
         .resource-stats p {
             margin: 0;
         }
+
+        /* 讓服務項目更加顯眼 */
+        .service-item {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            transition: box-shadow 0.3s;
+        }
+
+        .service-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 統一 SSH 按鈕樣式 */
+        .sshButton {
+            min-width: 80px;
+        }
     </style>
 </head>
 <body>
@@ -46,7 +64,7 @@
 
 <div class="container mt-4">
     <h2>您的服務</h2>
-    <div id="serviceList" class="mb-5">
+    <div id="serviceList" class="row">
         <!-- 這裡會動態填入服務項目 -->
     </div>
 </div>
@@ -63,14 +81,6 @@
 
     // todo: using jwt to fetch username from server
     document.addEventListener('DOMContentLoaded', async function () {
-        // const urlParams = new URLSearchParams(window.location.search);
-        // const username = urlParams.get('username');
-        // if (username) {
-        //     document.getElementById("navbarUsername").innerText = username;
-        //     await fetchUserServices(username);
-        //
-        //     setupResourceWebSocket(username);
-        // }
         const jwtToken = localStorage.getItem('jwtToken');
         if (jwtToken) {
             try {
@@ -108,23 +118,22 @@
 
             services.forEach(service => {
                 const serviceItem = document.createElement("div");
-                serviceItem.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-3");
+                serviceItem.classList.add("col-md-6", "mb-4"); // 使用 Bootstrap column 格式
                 serviceItem.innerHTML = `
-                <div>
-                    <p><strong>使用者名稱:</strong> ${service.username}</p>
-                    <p><strong>服務名稱:</strong> ${service.serviceName}</p>
-                    <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
-                    <p><strong>服務網址:</strong> ${service.endpoint}</p>
+                <div class="service-item">
+                    <div>
+                        <p><strong>使用者名稱:</strong> ${service.username}</p>
+                        <p><strong>服務名稱:</strong> ${service.serviceName}</p>
+                        <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
+                        <p><strong>服務網址:</strong> ${service.endpoint}</p>
+                    </div>
+                    <div class="resource-stats" id="stats-${service.containerName}">
+                        <p><strong>CPU:</strong> <span id="cpu-${service.containerName}">-</span></p>
+                        <p><strong>RAM:</strong> <span id="ram-${service.containerName}">-</span></p>
+                    </div>
+                    <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
                 </div>
-                <div class="resource-stats" id="stats-${service.containerName}">
-                    <p><strong>CPU:</strong> <span id="cpu-${service.containerName}">-</span></p>
-                    <p><strong>RAM:</strong> <span id="ram-${service.containerName}">-</span></p>
-                </div>
-                <button class="sshButton btn btn-secondary" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
             `;
-
-                //todo: remove on production
-                console.log('container name on fetching service' + service.containerName);
 
                 serviceList.appendChild(serviceItem);
 
@@ -153,10 +162,6 @@
             const cpu = stats[0].split(" ")[1]; // 取得 CPU 使用量
             const ram = stats[1].split(" ")[1]; // 取得 RAM 使用量
 
-            //todo: remove on
-            console.log('container name on message' + containerName);
-
-            // 使用容器名稱來定位對應的元素並更新
             document.getElementById(`cpu-${containerName}`).textContent = cpu;
             document.getElementById(`ram-${containerName}`).textContent = ram;
         };
