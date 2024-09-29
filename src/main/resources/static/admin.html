@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Worker Nodes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"/>
+    <style>
+        /* 資源顯示區域樣式 */
+        .resource-stats {
+            border-left: 1px solid #ccc;
+            padding-left: 20px;
+            color: #333;
+        }
+
+        .resource-stats p {
+            margin: 0;
+        }
+
+        .node-section {
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="index.html">GitMazon Admin</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="services.html">使用者服務</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="adminPage.html">Worker Nodes</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2>Worker Nodes</h2>
+    <div id="workerNodeList" class="mb-5">
+        <!-- 這裡會動態填入 worker node 和服務 -->
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            // const response = await fetch('http://localhost:8082/services');
+            const response = await fetch('http://52.69.33.14:8082/services');
+            const workerNodes = await response.json();
+
+            const workerNodeList = document.getElementById("workerNodeList");
+            workerNodeList.innerHTML = "";
+
+            workerNodes.forEach(workerNode => {
+                const nodeSection = document.createElement("div");
+                nodeSection.classList.add("node-section");
+
+                nodeSection.innerHTML = `
+                <h4>Worker Node IP: ${workerNode.workerNodeIp}</h4>
+                <div id="serviceList-${workerNode.workerNodeIp}">
+                    <!-- 這裡會填入該 worker node 下的服務 -->
+                </div>`;
+
+                workerNodeList.appendChild(nodeSection);
+
+                const serviceList = document.getElementById(`serviceList-${workerNode.workerNodeIp}`);
+
+                workerNode.services.forEach(service => {
+                    const serviceItem = document.createElement("div");
+                    serviceItem.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-3");
+                    serviceItem.innerHTML = `
+                    <div>
+                        <p><strong>使用者名稱:</strong> ${service.username}</p>
+                        <p><strong>服務名稱:</strong> ${service.serviceName}</p>
+                        <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
+                        <p><strong>服務網址:</strong> ${service.endpoint}</p>
+                    </div>
+                    <div class="resource-stats" id="stats-${service.containerName}">
+                        <p><strong>CPU:</strong> <span id="cpu-${service.containerName}">-</span></p>
+                        <p><strong>RAM:</strong> <span id="ram-${service.containerName}">-</span></p>
+                    </div>
+                    <button class="sshButton btn btn-secondary" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
+                `;
+
+                    serviceList.appendChild(serviceItem);
+
+                    serviceItem.querySelector(".sshButton").addEventListener("click", function () {
+                        openWebTerminal(service.username, service.repoName);
+                    });
+                });
+
+                setUpResourceWebSocket();
+            });
+        } catch (error) {
+            console.error("Error fetching worker nodes:", error);
+        }
+    });
+
+    function setUpResourceWebSocket() {
+        const socket = new WebSocket(`ws://13.231.5.244:8080/monitor?username=admin`)
+
+        socket.onmessage = function (event) {
+            const message = event.data;
+
+            const parts = message.split(": ");
+            const containerName = parts[0]; // 取得容器名稱
+            const stats = parts[1].split(", ");
+            const cpu = stats[0].split(" ")[1]; // 取得 CPU 使用量
+            const ram = stats[1].split(" ")[1]; // 取得 RAM 使用量
+
+            console.log(containerName);
+
+            document.getElementById(`cpu-${containerName}`).textContent = cpu;
+            document.getElementById(`ram-${containerName}`).textContent = ram;
+        }
+
+        socket.onerror = function (error) {
+            console.error("WebSocket error:", error);
+        }
+    }
+
+    function openWebTerminal(username, repoName) {
+        const terminalContainer = document.getElementById("terminal-container");
+        const terminalElement = document.getElementById("terminal");
+
+        terminalContainer.style.display = 'block';
+
+        const term = new Terminal();
+        term.open(terminalElement);
+
+        const socket = new WebSocket(`ws://${window.location.host}/terminal?username=${username}&repoName=${repoName}`);
+
+        term.onData(function (data) {
+            socket.send(data);
+        });
+
+        socket.onmessage = (event) => {
+            term.write(event.data);
+        };
+
+        socket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+    }
+</script>
+</body>
+</html>

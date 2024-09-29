@@ -122,6 +122,10 @@
                 </div>
                 <button class="sshButton btn btn-secondary" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
             `;
+
+                //todo: remove on production
+                console.log('container name on fetching service' + service.containerName);
+
                 serviceList.appendChild(serviceItem);
 
                 // 綁定 SSH 按鈕
@@ -148,6 +152,9 @@
             const stats = parts[1].split(", ");
             const cpu = stats[0].split(" ")[1]; // 取得 CPU 使用量
             const ram = stats[1].split(" ")[1]; // 取得 RAM 使用量
+
+            //todo: remove on
+            console.log('container name on message' + containerName);
 
             // 使用容器名稱來定位對應的元素並更新
             document.getElementById(`cpu-${containerName}`).textContent = cpu;
