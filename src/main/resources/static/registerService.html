@@ -171,7 +171,9 @@
 
         const jwtToken = localStorage.getItem('jwtToken');
         try {
-            const response = await fetch("http://52.69.33.14:8082/registerService", {
+            // const response = await fetch("/registerService", {
+            // const response = await fetch("http://52.69.33.14:8082/registerService", {
+            const response = await fetch("https://masternode.gitmazon.com/registerService", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -191,7 +193,8 @@
 
     async function getJwtToken(username) {
         try {
-            const response = await fetch(`http://52.69.33.14:8082/generateJwtToken?username=${username}`);
+            // const response = await fetch(`http://52.69.33.14:8082/generateJwtToken?username=${username}`);
+            const response = await fetch(`https://masternode.gitmazon.com/generateJwtToken?username=${username}`);
             const jwtToken = await response.text();
             localStorage.setItem('jwtToken', jwtToken);
             console.log('JWT Token stored in localStorage');

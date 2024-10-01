@@ -84,7 +84,8 @@
         const jwtToken = localStorage.getItem('jwtToken');
         if (jwtToken) {
             try {
-                const response = await fetch('http://52.69.33.14:8082/user', {
+                // const response = await fetch('http://52.69.33.14:8082/user', {
+                const response = await fetch('https://masternode.gitmazon.com/user', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${jwtToken}` // 使用 JWT token 作為 Authorization
@@ -110,7 +111,8 @@
 
     async function fetchUserServices(username) {
         try {
-            const response = await fetch(`http://52.69.33.14:8082/userService?username=${username}`);
+            const response = await fetch(`https://masternode.gitmazon.com/userService?username=${username}`);
+            // const response = await fetch(`http://52.69.33.14:8082/userService?username=${username}`);
             const services = await response.json();
 
             const serviceList = document.getElementById("serviceList");
@@ -118,7 +120,7 @@
 
             services.forEach(service => {
                 const serviceItem = document.createElement("div");
-                serviceItem.classList.add("col-md-6", "mb-4"); // 使用 Bootstrap column 格式
+                // serviceItem.classList.add("col-md-6", "mb-4"); // 使用 Bootstrap column 格式
                 serviceItem.innerHTML = `
                 <div class="service-item">
                     <div>
@@ -149,7 +151,8 @@
 
     function setupResourceWebSocket(username) {
         // 建立一次 WebSocket 連接
-        const socket = new WebSocket(`ws://13.231.5.244:8080/monitor?username=${username}`);
+        // const socket = new WebSocket(`ws://13.231.5.244:8080/monitor?username=${username}`);
+        const socket = new WebSocket(`wss://kafkaconsumer.gitmazon.com/monitor?username=${username}`);
 
         // 當接收到訊息時更新對應的服務狀態
         socket.onmessage = function (event) {
@@ -181,7 +184,9 @@
         const term = new Terminal();
         term.open(terminalElement);
 
-        const socket = new WebSocket(`ws://${window.location.host}/terminal?username=${username}&repoName=${repoName}`);
+        // Change to websocket
+        // const socket = new WebSocket(`ws://${window.location.host}/terminal?username=${username}&repoName=${repoName}`);
+        const socket = new WebSocket(`wss://gitmazon.com/terminal?username=${username}&repoName=${repoName}`);
 
         term.onData(function (data) {
             socket.send(data);
