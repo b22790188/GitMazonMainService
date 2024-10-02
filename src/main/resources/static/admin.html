@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"/>
     <style>
-        /* 資源顯示區域樣式 */
+        /* Resource display area style */
         .resource-stats {
             border-left: 1px solid #ccc;
             padding-left: 20px;
@@ -21,7 +21,7 @@
             margin-bottom: 40px;
         }
 
-        /* 讓 Worker Node 看起來更美觀 */
+        /* Make Worker Node look more appealing */
         .node-section h4 {
             background-color: #343a40;
             color: white;
@@ -29,7 +29,7 @@
             border-radius: 8px;
         }
 
-        /* 讓服務項目更加顯眼 */
+        /* Make service items more prominent */
         .service-item {
             background-color: #f8f9fa;
             border: 1px solid #ddd;
@@ -42,9 +42,23 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        /* 統一 SSH 按鈕樣式 */
+        /* Unify SSH button style */
         .sshButton {
             min-width: 80px;
+        }
+
+        /* Modal terminal popup style */
+        #terminalModal .modal-dialog {
+            max-width: 80vw;
+        }
+
+        #terminalModal .modal-content {
+            height: 70vh;
+        }
+
+        #terminal {
+            height: 100%;
+            width: 100%;
         }
 
     </style>
@@ -61,7 +75,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="services.html">使用者服務</a>
+                    <a class="nav-link" href="services.html">User Services</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="adminPage.html">Worker Nodes</a>
@@ -74,19 +88,30 @@
 <div class="container mt-4">
     <h2>Worker Nodes</h2>
     <div id="workerNodeList" class="mb-5">
-        <!-- 這裡會動態填入 worker node 和服務 -->
+        <!-- Worker nodes and services will be dynamically filled here -->
     </div>
 </div>
 
-<!-- Terminal Section -->
-<div id="terminal-container" class="container mt-4" style="display:none;">
-    <h3>Web Terminal</h3>
-    <div id="terminal" style="height: 400px; width: 100%;"></div>
+<!-- Terminal Modal popup -->
+<div class="modal fade" id="terminalModal" tabindex="-1" aria-labelledby="terminalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="terminalModalLabel">Web Terminal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="terminal"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
 <script>
+    let term; // Initialize xterm variable in outer scope
+
     document.addEventListener('DOMContentLoaded', async function () {
         try {
             // const response = await fetch('http://52.69.33.14:8082/services');
@@ -104,7 +129,7 @@
                 nodeSection.innerHTML = `
                 <h4>Worker Node IP: ${workerNode.workerNodeIp}</h4>
                 <div id="serviceList-${workerNode.workerNodeIp}" class="row">
-                    <!-- 這裡會填入該 worker node 下的服務 -->
+                    <!-- Services for this worker node will be filled here -->
                 </div>`;
 
                 workerNodeList.appendChild(nodeSection);
@@ -113,14 +138,14 @@
 
                 workerNode.services.forEach(service => {
                     const serviceItem = document.createElement("div");
-                    serviceItem.classList.add("col-md-6", "mb-4"); // 使用 Bootstrap column 格式
+                    serviceItem.classList.add("col-md-6", "mb-4"); // Use Bootstrap column format
                     serviceItem.innerHTML = `
                     <div class="service-item">
                         <div>
-                            <p><strong>使用者名稱:</strong> ${service.username}</p>
-                            <p><strong>服務名稱:</strong> ${service.serviceName}</p>
-                            <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
-                            <p><strong>服務網址:</strong> ${service.endpoint}</p>
+                            <p><strong>Username:</strong> ${service.username}</p>
+                            <p><strong>Service Name:</strong> ${service.serviceName}</p>
+                            <p><strong>Repo Name:</strong> ${service.repoName}</p>
+                            <p><strong>Service URL:</strong> ${service.endpoint}</p>
                         </div>
                         <div class="resource-stats" id="stats-${service.containerName}">
                             <p><strong>CPU:</strong> <span id="cpu-${service.containerName}">-</span></p>
@@ -151,10 +176,10 @@
             const message = event.data;
 
             const parts = message.split(": ");
-            const containerName = parts[0]; // 取得容器名稱
+            const containerName = parts[0]; // Get container name
             const stats = parts[1].split(", ");
-            const cpu = stats[0].split(" ")[1]; // 取得 CPU 使用量
-            const ram = stats[1].split(" ")[1]; // 取得 RAM 使用量
+            const cpu = stats[0].split(" ")[1]; // Get CPU usage
+            const ram = stats[1].split(" ")[1]; // Get RAM usage
 
             document.getElementById(`cpu-${containerName}`).textContent = cpu;
             document.getElementById(`ram-${containerName}`).textContent = ram;
@@ -166,15 +191,21 @@
     }
 
     function openWebTerminal(username, repoName) {
-        const terminalContainer = document.getElementById("terminal-container");
         const terminalElement = document.getElementById("terminal");
 
-        terminalContainer.style.display = 'block';
+        // If a terminal already exists, clear the previous content
+        if (term) {
+            term.dispose(); // Clear previous terminal content
+        }
 
-        const term = new Terminal();
+        // Show popup
+        const modal = new bootstrap.Modal(document.getElementById('terminalModal'));
+        modal.show();
+
+        // Initialize terminal
+        term = new Terminal();
         term.open(terminalElement);
 
-        // const socket = new WebSocket(`ws://${window.location.host}/terminal?username=${username}&repoName=${repoName}`);
         const socket = new WebSocket(`wss://gitmazon.com/terminal?username=${username}&repoName=${repoName}`);
 
         term.onData(function (data) {
@@ -183,6 +214,13 @@
 
         socket.onmessage = (event) => {
             term.write(event.data);
+
+            // Close the popup when receiving the exit command
+            if (event.data.includes('exit')) {
+                socket.close();
+                modal.hide();
+                term.dispose(); // Clear terminal content
+            }
         };
 
         socket.onerror = (error) => {

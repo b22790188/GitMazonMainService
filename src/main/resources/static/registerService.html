@@ -150,6 +150,30 @@
             document.getElementById("navbarUsername").innerText = username;
             document.getElementById("serviceLink").href = `services.html?username=${username}`;
             await getJwtToken(username);
+        } else {
+            const jwtToken = localStorage.getItem('jwtToken');
+            if (jwtToken) {
+                try {
+                    const response = await fetch('https://masternode.gitmazon.com/user', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${jwtToken}`
+                        }
+                    })
+
+                    if (response.ok) {
+                        const userData = await response.json();
+                        document.getElementById('navbarUsername').innerText = userData.username;
+
+                    } else {
+                        console.error('Failed to fetch user information');
+                    }
+                } catch (error) {
+                    console.error('Error fetching user information', error);
+                }
+            } else {
+                console.error('JWT token not found');
+            }
         }
     });
 
