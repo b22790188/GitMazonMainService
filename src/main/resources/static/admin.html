@@ -114,9 +114,7 @@
 
     document.addEventListener('DOMContentLoaded', async function () {
         try {
-            // const response = await fetch('http://52.69.33.14:8082/services');
             const response = await fetch('https://masternode.gitmazon.com/services');
-
             const workerNodes = await response.json();
 
             const workerNodeList = document.getElementById("workerNodeList");
@@ -128,6 +126,10 @@
 
                 nodeSection.innerHTML = `
                 <h4>Worker Node IP: ${workerNode.workerNodeIp}</h4>
+                <div class="resource-stats">
+                    <p><strong>CPU:</strong> <span id="cpu-${workerNode.workerNodeIp}">-</span></p>
+                    <p><strong>RAM:</strong> <span id="ram-${workerNode.workerNodeIp}">-</span></p>
+                </div>
                 <div id="serviceList-${workerNode.workerNodeIp}" class="row">
                     <!-- Services for this worker node will be filled here -->
                 </div>`;
@@ -170,39 +172,37 @@
     });
 
     function setUpResourceWebSocket() {
-        const socket = new WebSocket(`wss://kafkaconsumer.gitmazon.com/monitor?username=admin`)
+        const socket = new WebSocket(`wss://kafkaconsumer.gitmazon.com/monitor?username=admin`);
 
         socket.onmessage = function (event) {
             const message = event.data;
-
             const parts = message.split(": ");
-            const containerName = parts[0]; // Get container name
+            const identifier = parts[0]; // Either container name or worker node IP
             const stats = parts[1].split(", ");
-            const cpu = stats[0].split(" ")[1]; // Get CPU usage
-            const ram = stats[1].split(" ")[1]; // Get RAM usage
+            const cpu = stats[0].split(" ")[1];
+            const ram = stats[1].split(" ")[1];
 
-            document.getElementById(`cpu-${containerName}`).textContent = cpu;
-            document.getElementById(`ram-${containerName}`).textContent = ram;
-        }
+            if (document.getElementById(`cpu-${identifier}`)) {
+                document.getElementById(`cpu-${identifier}`).textContent = cpu;
+                document.getElementById(`ram-${identifier}`).textContent = ram;
+            }
+        };
 
         socket.onerror = function (error) {
             console.error("WebSocket error:", error);
-        }
+        };
     }
 
     function openWebTerminal(username, repoName) {
         const terminalElement = document.getElementById("terminal");
 
-        // If a terminal already exists, clear the previous content
         if (term) {
-            term.dispose(); // Clear previous terminal content
+            term.dispose();
         }
 
-        // Show popup
         const modal = new bootstrap.Modal(document.getElementById('terminalModal'));
         modal.show();
 
-        // Initialize terminal
         term = new Terminal();
         term.open(terminalElement);
 
@@ -215,11 +215,10 @@
         socket.onmessage = (event) => {
             term.write(event.data);
 
-            // Close the popup when receiving the exit command
             if (event.data.includes('exit')) {
                 socket.close();
                 modal.hide();
-                term.dispose(); // Clear terminal content
+                term.dispose();
             }
         };
 
