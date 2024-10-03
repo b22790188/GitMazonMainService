@@ -40,7 +40,6 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         String username = uriComponents.getQueryParams().getFirst("username");
         String repoName = uriComponents.getQueryParams().getFirst("repoName");
 
-        //todo: change parameter from serviceName to repoName
         //get data from backend
         String apiUrl = "http://" + masterNodeHost + "/info?username=" + username + "&repoName=" + repoName;
         log.info(apiUrl);

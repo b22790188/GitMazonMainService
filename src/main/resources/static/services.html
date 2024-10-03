@@ -31,7 +31,7 @@
         }
 
         /* Unify SSH button style */
-        .sshButton {
+        .sshButton, .unregisterButton {
             min-width: 80px;
         }
 
@@ -104,7 +104,6 @@
 
     let term; // Initialize xterm variable in outer scope
 
-    // todo: using jwt to fetch username from server
     document.addEventListener('DOMContentLoaded', async function () {
         const jwtToken = localStorage.getItem('jwtToken');
         if (jwtToken) {
@@ -143,6 +142,7 @@
 
             services.forEach(service => {
                 const serviceItem = document.createElement("div");
+                serviceItem.classList.add("col-md-6", "mb-4"); // Use Bootstrap column format
                 serviceItem.innerHTML = `
                 <div class="service-item">
                     <div>
@@ -156,6 +156,7 @@
                         <p><strong>RAM:</strong> <span id="ram-${service.containerName}">-</span></p>
                     </div>
                     <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
+                    <button class="unregisterButton btn btn-danger mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
                 </div>
             `;
 
@@ -164,6 +165,11 @@
                 // Bind SSH button
                 serviceItem.querySelector(".sshButton").addEventListener("click", function () {
                     openWebTerminal(service.username, service.repoName);
+                });
+
+                // Bind Unregister button
+                serviceItem.querySelector(".unregisterButton").addEventListener("click", function () {
+                    unregisterService(service.username, service.repoName);
                 });
             });
         } catch (error) {
@@ -189,6 +195,25 @@
         socket.onerror = function (error) {
             console.error("WebSocket error:", error);
         };
+    }
+
+    function unregisterService(username, repoName) {
+        if (confirm("確定要取消註冊這個服務嗎？")) {
+            fetch(`https://masternode.gitmazon.com/unRegisterService?username=${username}&repoName=${repoName}`, {
+                method: 'POST'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert("服務已成功取消註冊");
+                        location.reload();
+                    } else {
+                        console.error("Failed to unregister service");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error unregistering service:", error);
+                });
+        }
     }
 
     function openWebTerminal(username, repoName) {
