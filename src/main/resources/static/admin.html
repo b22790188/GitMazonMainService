@@ -5,6 +5,7 @@
     <title>Admin - Worker Nodes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Resource display area style */
         .resource-stats {
@@ -14,7 +15,7 @@
         }
 
         .resource-stats p {
-            margin: 0;
+            margin: 0 0 10px 0;
         }
 
         .node-section {
@@ -61,6 +62,11 @@
             width: 100%;
         }
 
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
+        }
     </style>
 </head>
 <body>
@@ -111,6 +117,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
 <script>
     let term; // Initialize xterm variable in outer scope
+    const charts = {}; // Object to hold all chart instances
 
     document.addEventListener('DOMContentLoaded', async function () {
         try {
@@ -124,11 +131,18 @@
                 const nodeSection = document.createElement("div");
                 nodeSection.classList.add("node-section");
 
+                // Render Worker Node CPU and RAM usage charts even if there are no services
                 nodeSection.innerHTML = `
                 <h4>Worker Node IP: ${workerNode.workerNodeIp}</h4>
                 <div class="resource-stats">
-                    <p><strong>CPU:</strong> <span id="cpu-${workerNode.workerNodeIp}">-</span></p>
-                    <p><strong>RAM:</strong> <span id="ram-${workerNode.workerNodeIp}">-</span></p>
+                    <p><strong>CPU 使用情況:</strong></p>
+                    <div class="chart-container">
+                        <canvas id="cpu-chart-${workerNode.workerNodeIp}"></canvas>
+                    </div>
+                    <p><strong>RAM 使用情況:</strong></p>
+                    <div class="chart-container">
+                        <canvas id="ram-chart-${workerNode.workerNodeIp}"></canvas>
+                    </div>
                 </div>
                 <div id="serviceList-${workerNode.workerNodeIp}" class="row">
                     <!-- Services for this worker node will be filled here -->
@@ -136,40 +150,100 @@
 
                 workerNodeList.appendChild(nodeSection);
 
+                // Initialize CPU and RAM charts for each Worker Node
+                if (!charts[`cpu-${workerNode.workerNodeIp}`]) {
+                    charts[`cpu-${workerNode.workerNodeIp}`] = initializeChart(`cpu-chart-${workerNode.workerNodeIp}`, 'CPU Usage (%)', 'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 10);
+                }
+                if (!charts[`ram-${workerNode.workerNodeIp}`]) {
+                    charts[`ram-${workerNode.workerNodeIp}`] = initializeChart(`ram-chart-${workerNode.workerNodeIp}`, 'RAM Usage (MB)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000);
+                }
+
+                // Render services under each Worker Node if they exist
                 const serviceList = document.getElementById(`serviceList-${workerNode.workerNodeIp}`);
-
-                workerNode.services.forEach(service => {
-                    const serviceItem = document.createElement("div");
-                    serviceItem.classList.add("col-md-6", "mb-4"); // Use Bootstrap column format
-                    serviceItem.innerHTML = `
-                    <div class="service-item">
-                        <div>
-                            <p><strong>Username:</strong> ${service.username}</p>
-                            <p><strong>Service Name:</strong> ${service.serviceName}</p>
-                            <p><strong>Repo Name:</strong> ${service.repoName}</p>
-                            <p><strong>Service URL:</strong> ${service.endpoint}</p>
+                if (workerNode.services.length > 0) {
+                    workerNode.services.forEach(service => {
+                        const serviceItem = document.createElement("div");
+                        serviceItem.classList.add("col-md-6", "mb-4"); // Use Bootstrap column format
+                        serviceItem.innerHTML = `
+                        <div class="service-item">
+                            <div>
+                                <p><strong>Username:</strong> ${service.username}</p>
+                                <p><strong>Service Name:</strong> ${service.serviceName}</p>
+                                <p><strong>Repo Name:</strong> ${service.repoName}</p>
+                                <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
+                            </div>
+                            <div class="resource-stats">
+                                <p><strong>CPU 使用情況:</strong></p>
+                                <div class="chart-container">
+                                    <canvas id="cpu-chart-${service.containerName}"></canvas>
+                                </div>
+                                <p><strong>RAM 使用情況:</strong></p>
+                                <div class="chart-container">
+                                    <canvas id="ram-chart-${service.containerName}"></canvas>
+                                </div>
+                            </div>
+                            <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
                         </div>
-                        <div class="resource-stats" id="stats-${service.containerName}">
-                            <p><strong>CPU:</strong> <span id="cpu-${service.containerName}">-</span></p>
-                            <p><strong>RAM:</strong> <span id="ram-${service.containerName}">-</span></p>
-                        </div>
-                        <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
-                    </div>
-                `;
+                    `;
 
-                    serviceList.appendChild(serviceItem);
+                        serviceList.appendChild(serviceItem);
 
-                    serviceItem.querySelector(".sshButton").addEventListener("click", function () {
-                        openWebTerminal(service.username, service.repoName);
+                        // Initialize charts for each service
+                        charts[`cpu-${service.containerName}`] = initializeChart(`cpu-chart-${service.containerName}`, 'CPU Usage (%)', 'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 10);
+                        charts[`ram-${service.containerName}`] = initializeChart(`ram-chart-${service.containerName}`, 'RAM Usage (MB)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000);
+
+                        // Bind SSH button
+                        serviceItem.querySelector(".sshButton").addEventListener("click", function () {
+                            openWebTerminal(service.username, service.repoName);
+                        });
                     });
-                });
-
-                setUpResourceWebSocket();
+                }
             });
+
+            setUpResourceWebSocket();
         } catch (error) {
             console.error("Error fetching worker nodes:", error);
         }
     });
+
+    function initializeChart(canvasId, label, bgColor, borderColor, maxX) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        return new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [label],
+                datasets: [{
+                    label: label,
+                    data: [0],
+                    backgroundColor: bgColor,
+                    borderColor: borderColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: maxX,  // Initial max value
+                        ticks: {
+                            precision: 0
+                        }
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
 
     function setUpResourceWebSocket() {
         const socket = new WebSocket(`wss://kafkaconsumer.gitmazon.com/monitor?username=admin`);
@@ -177,14 +251,25 @@
         socket.onmessage = function (event) {
             const message = event.data;
             const parts = message.split(": ");
+            if (parts.length !== 2) return; // Invalid message format
+
             const identifier = parts[0]; // Either container name or worker node IP
             const stats = parts[1].split(", ");
-            const cpu = stats[0].split(" ")[1];
-            const ram = stats[1].split(" ")[1];
+            if (stats.length !== 2) return; // Invalid stats format
 
-            if (document.getElementById(`cpu-${identifier}`)) {
-                document.getElementById(`cpu-${identifier}`).textContent = cpu;
-                document.getElementById(`ram-${identifier}`).textContent = ram;
+            const cpu = parseFloat(stats[0].split(" ")[1]);
+            const ram = parseFloat(stats[1].split(" ")[1]);
+
+            // Update CPU chart
+            const cpuChartKey = `cpu-${identifier}`;
+            if (charts[cpuChartKey]) {
+                updateChart(cpuChartKey, cpu, 10); // Set initial maxX to 10
+            }
+
+            // Update RAM chart
+            const ramChartKey = `ram-${identifier}`;
+            if (charts[ramChartKey]) {
+                updateChart(ramChartKey, ram, 1000); // Set initial maxX to 1000
             }
         };
 
@@ -193,16 +278,33 @@
         };
     }
 
+    function updateChart(chartKey, value, defaultMax) {
+        const chart = charts[chartKey];
+        if (!chart) return;
+
+        // Dynamically adjust the X axis max if needed
+        if (value > chart.options.scales.x.max) {
+            chart.options.scales.x.max = Math.ceil(value / 10) * 10; // Increase max to the next multiple of 10
+            chart.update('none'); // Update without animation
+        }
+
+        chart.data.datasets[0].data[0] = value;
+        chart.update();
+    }
+
     function openWebTerminal(username, repoName) {
         const terminalElement = document.getElementById("terminal");
 
+        // If a terminal already exists, clear the previous content
         if (term) {
-            term.dispose();
+            term.dispose(); // Clear previous terminal content
         }
 
+        // Show popup
         const modal = new bootstrap.Modal(document.getElementById('terminalModal'));
         modal.show();
 
+        // Initialize terminal
         term = new Terminal();
         term.open(terminalElement);
 
@@ -215,10 +317,11 @@
         socket.onmessage = (event) => {
             term.write(event.data);
 
+            // Close the popup when receiving the exit command
             if (event.data.includes('exit')) {
                 socket.close();
                 modal.hide();
-                term.dispose();
+                term.dispose(); // Clear terminal content
             }
         };
 
