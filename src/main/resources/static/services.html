@@ -170,6 +170,7 @@
                     </div>
                     <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
                     <button class="unregisterButton btn btn-danger mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
+                    <button class="restartButton btn btn-warning mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">重啟</button>
                 </div>
             `;
 
@@ -186,6 +187,11 @@
                 // Bind Unregister button
                 serviceItem.querySelector(".unregisterButton").addEventListener("click", function () {
                     unregisterService(service.username, service.repoName);
+                });
+
+                // Bind Restart button
+                serviceItem.querySelector(".restartButton").addEventListener("click", function () {
+                    restartContainer(service.username, service.repoName);
                 });
             });
         } catch (error) {
@@ -281,6 +287,24 @@
         socket.onerror = function (error) {
             console.error("WebSocket error:", error);
         };
+    }
+
+    function restartContainer(username, repoName) {
+        if (confirm("確定要重啟這個服務嗎？")) {
+            fetch(`https://masternode.gitmazon.com/restartContainer?username=${username}&repoName=${repoName}`, {
+                method: 'POST'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert("服務已成功重啟");
+                    } else {
+                        console.error("Failed to restart container");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error restarting container:", error);
+                });
+        }
     }
 
     function unregisterService(username, repoName) {
