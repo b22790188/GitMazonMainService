@@ -135,11 +135,11 @@
                 nodeSection.innerHTML = `
                 <h4>Worker Node IP: ${workerNode.workerNodeIp}</h4>
                 <div class="resource-stats">
-                    <p><strong>CPU 使用情況:</strong></p>
+                    <p><strong>CPU 使用情況:</strong> <span id="cpu-usage-${workerNode.workerNodeIp}">0%</span></p>
                     <div class="chart-container">
                         <canvas id="cpu-chart-${workerNode.workerNodeIp}"></canvas>
                     </div>
-                    <p><strong>RAM 使用情況:</strong></p>
+                    <p><strong>RAM 使用情況:</strong> <span id="ram-usage-${workerNode.workerNodeIp}">0 MB</span></p>
                     <div class="chart-container">
                         <canvas id="ram-chart-${workerNode.workerNodeIp}"></canvas>
                     </div>
@@ -179,11 +179,11 @@
                                 <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
                             </div>
                             <div class="resource-stats">
-                                <p><strong>CPU 使用情況:</strong></p>
+                                <p><strong>CPU 使用情況:</strong> <span id="cpu-usage-${service.containerName}">0%</span></p>
                                 <div class="chart-container">
                                     <canvas id="cpu-chart-${service.containerName}"></canvas>
                                 </div>
-                                <p><strong>RAM 使用情況:</strong></p>
+                                <p><strong>RAM 使用情況:</strong> <span id="ram-usage-${service.containerName}">0 MB</span></p>
                                 <div class="chart-container">
                                     <canvas id="ram-chart-${service.containerName}"></canvas>
                                 </div>
@@ -264,12 +264,14 @@
             const cpuChartKey = `cpu-${identifier}`;
             if (charts[cpuChartKey]) {
                 updateChart(cpuChartKey, cpu, 10); // Set initial maxX to 10
+                document.getElementById(`cpu-usage-${identifier}`).innerText = `${cpu}%`;
             }
 
             // Update RAM chart
             const ramChartKey = `ram-${identifier}`;
             if (charts[ramChartKey]) {
                 updateChart(ramChartKey, ram, 1000); // Set initial maxX to 1000
+                document.getElementById(`ram-usage-${identifier}`).innerText = `${ram} MB`;
             }
         };
 
