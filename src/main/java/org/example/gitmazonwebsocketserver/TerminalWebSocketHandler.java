@@ -39,23 +39,35 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         UriComponents uriComponents = UriComponentsBuilder.fromUri(session.getUri()).build();
         String username = uriComponents.getQueryParams().getFirst("username");
         String repoName = uriComponents.getQueryParams().getFirst("repoName");
+        String ip = uriComponents.getQueryParams().getFirst("ip");
+
+        String[] command;
+
+        if (ip != null) {
+            log.info("Connecting to machine: " + ip);
+            command = new String[]{
+                "ssh", "-t", "-i", "~/.ssh/webserver.pem", "ubuntu@" + ip
+            };
+        } else {
+            String apiUrl = "http://" + masterNodeHost + "/info?username=" + username + "&repoName=" + repoName;
+            log.info(apiUrl);
+            String response = fetchPodInfo(apiUrl);
+            Map<String, String> podInfo = new ObjectMapper().readValue(response, Map.class);
+
+            ip = podInfo.get("podIP");
+            String container = podInfo.get("container");
+
+            log.info("Received Pod Info - IP: " + ip + ", Container: " + container);
+
+            // 建立 SSH 連線
+            command = new String[]{
+                "ssh", "-t", "-o", "LogLevel=QUIET", "-i", "~/.ssh/webserver.pem", "ubuntu@" + ip,
+                "sudo docker exec -it " + container + " bash"
+            };
+        }
 
         //get data from backend
-        String apiUrl = "http://" + masterNodeHost + "/info?username=" + username + "&repoName=" + repoName;
-        log.info(apiUrl);
-        String response = fetchPodInfo(apiUrl);
-        Map<String, String> podInfo = new ObjectMapper().readValue(response, Map.class);
 
-        String ip = podInfo.get("podIP");
-        String container = podInfo.get("container");
-
-        log.info("Received Pod Info - IP: " + ip + ", Container: " + container);
-
-        // 建立 SSH 連線
-        String[] command = {
-            "ssh", "-t", "-o", "LogLevel=QUIET", "-i", "~/.ssh/webserver.pem", "ubuntu@" + ip,
-            "sudo docker exec -it " + container + " bash"
-        };
         PtyProcess process = new PtyProcessBuilder(command).start();
         InputStream inputStream = process.getInputStream();
         OutputStream outputStream = process.getOutputStream();

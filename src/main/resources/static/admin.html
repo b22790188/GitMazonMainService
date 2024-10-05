@@ -144,6 +144,7 @@
                         <canvas id="ram-chart-${workerNode.workerNodeIp}"></canvas>
                     </div>
                 </div>
+                <button class="sshButton btn btn-secondary mt-3" data-ip="${workerNode.workerNodeIp}">SSH</button>
                 <div id="serviceList-${workerNode.workerNodeIp}" class="row">
                     <!-- Services for this worker node will be filled here -->
                 </div>`;
@@ -157,6 +158,11 @@
                 if (!charts[`ram-${workerNode.workerNodeIp}`]) {
                     charts[`ram-${workerNode.workerNodeIp}`] = initializeChart(`ram-chart-${workerNode.workerNodeIp}`, 'RAM Usage (MB)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000);
                 }
+
+                // Bind SSH button for Worker Node
+                nodeSection.querySelector(".sshButton").addEventListener("click", function () {
+                    openWebTerminal(workerNode.workerNodeIp);
+                });
 
                 // Render services under each Worker Node if they exist
                 const serviceList = document.getElementById(`serviceList-${workerNode.workerNodeIp}`);
@@ -182,7 +188,6 @@
                                     <canvas id="ram-chart-${service.containerName}"></canvas>
                                 </div>
                             </div>
-                            <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
                         </div>
                     `;
 
@@ -191,11 +196,6 @@
                         // Initialize charts for each service
                         charts[`cpu-${service.containerName}`] = initializeChart(`cpu-chart-${service.containerName}`, 'CPU Usage (%)', 'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 10);
                         charts[`ram-${service.containerName}`] = initializeChart(`ram-chart-${service.containerName}`, 'RAM Usage (MB)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000);
-
-                        // Bind SSH button
-                        serviceItem.querySelector(".sshButton").addEventListener("click", function () {
-                            openWebTerminal(service.username, service.repoName);
-                        });
                     });
                 }
             });
@@ -292,7 +292,7 @@
         chart.update();
     }
 
-    function openWebTerminal(username, repoName) {
+    function openWebTerminal(workerNodeIp) {
         const terminalElement = document.getElementById("terminal");
 
         // If a terminal already exists, clear the previous content
@@ -308,7 +308,7 @@
         term = new Terminal();
         term.open(terminalElement);
 
-        const socket = new WebSocket(`wss://gitmazon.com/terminal?username=${username}&repoName=${repoName}`);
+        const socket = new WebSocket(`wss://gitmazon.com/terminal?ip=${workerNodeIp}`);
 
         term.onData(function (data) {
             socket.send(data);
@@ -318,7 +318,7 @@
             term.write(event.data);
 
             // Close the popup when receiving the exit command
-            if (event.data.includes('exit')) {
+            if (event.data.includes('logout')) {
                 socket.close();
                 modal.hide();
                 term.dispose(); // Clear terminal content
