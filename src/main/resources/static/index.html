@@ -209,16 +209,20 @@
 
     // 檢查使用者是否登入，否則彈出登入提示視窗
     document.addEventListener('DOMContentLoaded', async function () {
-        const jwtToken = localStorage.getItem('jwtToken');
+        let jwtToken = localStorage.getItem('jwtToken');
         const registerServiceLink = document.getElementById('registerServiceLink');
         const myServiceLink = document.getElementById('myServiceLink');
+
+        const showLoginModal = () => {
+            var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            loginModal.show();
+        };
 
         // 如果使用者沒有登入，阻止註冊服務和我的服務的連結並彈出模態框
         registerServiceLink.addEventListener('click', function (event) {
             if (!jwtToken) {
                 event.preventDefault();
-                let loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-                loginModal.show();
+                showLoginModal();
             } else {
                 window.location.href = "registerService.html";
             }
@@ -227,8 +231,7 @@
         myServiceLink.addEventListener('click', function (event) {
             if (!jwtToken) {
                 event.preventDefault();
-                var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-                loginModal.show();
+                showLoginModal();
             } else {
                 window.location.href = `services.html?username=${username}`;
             }
@@ -248,9 +251,14 @@
                     document.getElementById('navbarUsername').innerHTML = `歡迎, ${userData.username}`;
                     document.getElementById("myServiceLink").href = `services.html?username=${userData.username}`;
                 } else {
-                    console.error('Failed to fetch user information');
+                    // Token 無效，視為未登入並移除 token
+                    localStorage.removeItem('jwtToken');
+                    jwtToken = null;
                 }
             } catch (error) {
+                // Token 無效，視為未登入並移除 token
+                localStorage.removeItem('jwtToken');
+                jwtToken = null;
                 console.error('Error fetching user information', error);
             }
         }
