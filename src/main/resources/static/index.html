@@ -105,6 +105,16 @@
         .navbar-collapse {
             text-align: left; /* 漢堡選單展開時文字靠左 */
         }
+
+        /* Modal 按鈕樣式 */
+        .modal .btn-primary {
+            background-color: #333333; /* 深灰色背景 */
+            border: none;
+        }
+
+        .modal .btn-primary:hover {
+            background-color: #555555; /* 滑鼠懸停時更亮的灰色 */
+        }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -125,10 +135,10 @@
                     <a class="nav-link" href="index.html">首頁</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="registerService.html">註冊服務</a>
+                    <a class="nav-link" href="#" id="registerServiceLink">註冊服務</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="services.html?username=" id="serviceLink">我的服務</a>
+                    <a class="nav-link" href="#" id="myServiceLink">我的服務</a>
                 </li>
             </ul>
             <span id="navbarUsername" class="navbar-text text-light">
@@ -146,6 +156,26 @@
     <a href="https://masternode.gitmazon.com/oauth2/authorization/github" class="login-btn">
         使用 GitHub 登入
     </a>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loginModalLabel">請先登入</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                您需要先登入才能使用這些功能。
+            </div>
+            <div class="modal-footer">
+                <a href="https://masternode.gitmazon.com/oauth2/authorization/github"
+                   class="btn btn-primary">立即登入</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
@@ -177,9 +207,33 @@
         retina_detect: true
     });
 
-    // Fetch JWT token and update navbar based on token presence
+    // 檢查使用者是否登入，否則彈出登入提示視窗
     document.addEventListener('DOMContentLoaded', async function () {
         const jwtToken = localStorage.getItem('jwtToken');
+        const registerServiceLink = document.getElementById('registerServiceLink');
+        const myServiceLink = document.getElementById('myServiceLink');
+
+        // 如果使用者沒有登入，阻止註冊服務和我的服務的連結並彈出模態框
+        registerServiceLink.addEventListener('click', function (event) {
+            if (!jwtToken) {
+                event.preventDefault();
+                let loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                loginModal.show();
+            } else {
+                window.location.href = "registerService.html";
+            }
+        });
+
+        myServiceLink.addEventListener('click', function (event) {
+            if (!jwtToken) {
+                event.preventDefault();
+                var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                loginModal.show();
+            } else {
+                window.location.href = `services.html?username=${username}`;
+            }
+        });
+
         if (jwtToken) {
             try {
                 const response = await fetch('https://masternode.gitmazon.com/user', {
@@ -192,7 +246,7 @@
                 if (response.ok) {
                     const userData = await response.json();
                     document.getElementById('navbarUsername').innerHTML = `歡迎, ${userData.username}`;
-                    document.getElementById("serviceLink").href = `services.html?username=${userData.username}`;
+                    document.getElementById("myServiceLink").href = `services.html?username=${userData.username}`;
                 } else {
                     console.error('Failed to fetch user information');
                 }
