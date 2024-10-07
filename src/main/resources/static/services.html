@@ -55,6 +55,13 @@
             width: 100%;
             height: 150px;
         }
+
+        .btn-close {
+            width: 1rem;
+            height: 1rem;
+            padding: 0.25rem;
+        }
+
     </style>
 </head>
 <body>
@@ -88,6 +95,13 @@
     <div id="serviceList" class="row">
         <!-- Service items will be dynamically filled here -->
     </div>
+</div>
+
+<div id="restartSuccessAlert"
+     class="alert alert-success alert-dismissible fade position-fixed top-0 start-50 translate-middle-x p-4"
+     role="alert" style="display: none;">
+    服務已成功重啟
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
 <!-- Terminal Modal popup -->
@@ -270,10 +284,7 @@
             const ramChart = Chart.getChart(`ram-chart-${containerName}`);
 
             if (cpuChart && ramChart) {
-                // Adjust the max dynamically if needed
-                if (cpu > 10) {
-                    cpuChart.options.scales.x.max = Math.ceil(cpu);
-                }
+
                 cpuChart.data.datasets[0].data[0] = cpu;
                 cpuChart.update();
 
@@ -297,7 +308,7 @@
             })
                 .then(response => {
                     if (response.ok) {
-                        alert("服務已成功重啟");
+                        showRestartSuccessAlert();
                     } else {
                         console.error("Failed to restart container");
                     }
@@ -306,6 +317,19 @@
                     console.error("Error restarting container:", error);
                 });
         }
+    }
+
+    function showRestartSuccessAlert() {
+        const alert = document.getElementById('restartSuccessAlert');
+        alert.style.display = 'block';
+        alert.classList.add('show');
+
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 150);
+        }, 3000);
     }
 
     function unregisterService(username, repoName) {
