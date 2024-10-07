@@ -110,6 +110,7 @@
 <script>
 
     let term; // Initialize xterm variable in outer scope
+    let modal = new bootstrap.Modal(document.getElementById('terminalModal'));
 
     document.addEventListener('DOMContentLoaded', async function () {
         const jwtToken = localStorage.getItem('jwtToken');
@@ -220,7 +221,7 @@
                 scales: {
                     x: {
                         min: 0,
-                        max: 10,  // Set a lower max value to make small changes more visible
+                        max: 100,  // Set a lower max value to make small changes more visible
                     },
                     y: {beginAtZero: true}
                 }
@@ -335,7 +336,6 @@
         }
 
         // Show popup
-        const modal = new bootstrap.Modal(document.getElementById('terminalModal'));
         modal.show();
 
         // Initialize terminal
