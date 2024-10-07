@@ -132,6 +132,11 @@
                 <input type="submit" class="btn btn-primary btn-block w-100" value="註冊">
             </form>
 
+            <div id="spinner" class="text-center" style="display:none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
             <p id="result"></p>
         </div>
     </div>
@@ -193,6 +198,10 @@
         };
 
         const jwtToken = localStorage.getItem('jwtToken');
+
+        document.getElementById("spinner").style.display = "block";
+        document.getElementById("result").innerText = "";
+
         try {
             // const response = await fetch("/registerService", {
             // const response = await fetch("http://52.69.33.14:8082/registerService", {
@@ -206,10 +215,12 @@
             });
 
             const data = await response.json();
+            document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerText = `您的服務網址是 ${data.serviceUrl}，並會在幾分鐘之內啟動。`;
 
         } catch (error) {
             console.error("Error:", error);
+            document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerText = "註冊失敗，請重試。";
         }
     });
