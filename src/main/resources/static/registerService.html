@@ -216,7 +216,7 @@
 
             const data = await response.json();
             document.getElementById("spinner").style.display = "none";
-            document.getElementById("result").innerText = `您的服務網址是 ${data.serviceUrl}，並會在幾分鐘之內啟動。`;
+            document.getElementById("result").innerHTML = `您的服務網址是 <a href="${data.serviceUrl}" target="_blank">${data.serviceUrl}<a/>，並會在幾分鐘之內啟動。`;
 
         } catch (error) {
             console.error("Error:", error);

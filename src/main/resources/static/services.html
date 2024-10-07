@@ -163,7 +163,7 @@
                         <p><strong>使用者名稱:</strong> ${service.username}</p>
                         <p><strong>服務名稱:</strong> ${service.serviceName}</p>
                         <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
-                        <p><strong>服務網址:</strong> ${service.endpoint}</p>
+                        <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
                     </div>
                     <div class="resource-stats" id="stats-${service.containerName}">
                         <p><strong>CPU 使用情況:</strong><span id="cpu-usage-${service.containerName}">0%</span></p>
