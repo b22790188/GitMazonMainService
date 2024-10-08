@@ -125,8 +125,8 @@
                 <div class="mb-3">
                     <label for="resourceConfig" class="form-label">資源配置：</label>
                     <select class="form-select" id="resourceConfig" name="resourceConfig" required>
-                        <option value="0.6,4">0.6 CPU / 4G RAM</option>
-                        <option value="0.3,2">0.3 CPU / 2G RAM</option>
+                        <option value="0.6,600">0.6 CPU / 600MB RAM</option>
+                        <option value="0.3,300">0.3 CPU / 300MB RAM</option>
                     </select>
                 </div>
                 <input type="submit" class="btn btn-primary btn-block w-100" value="註冊">
@@ -194,7 +194,8 @@
             serviceName: serviceName,
             repoUrl: repoUrl,
             cpu: parseFloat(resourceConfig[0]),
-            memory: parseFloat(resourceConfig[1])
+            // change from MB to GB
+            memory: parseFloat(resourceConfig[1]) / 1000
         };
 
         const jwtToken = localStorage.getItem('jwtToken');
