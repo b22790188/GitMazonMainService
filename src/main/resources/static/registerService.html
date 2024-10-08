@@ -184,6 +184,11 @@
     document.getElementById("serviceForm").addEventListener("submit", async function (event) {
         event.preventDefault();
 
+        const submitButton = document.querySelector("input[type=submit]");
+        submitButton.disabled = true;
+        submitButton.classList.remove("btn-primary");
+        submitButton.classList.add("btn-secondary");
+
         const username = document.getElementById("navbarUsername").innerText;
         const serviceName = document.getElementById("serviceName").value;
         const repoUrl = document.getElementById("repoUrl").value;
@@ -223,6 +228,10 @@
             console.error("Error:", error);
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerText = "註冊失敗，請重試。";
+        } finally {
+            submitButton.disabled = false;
+            submitButton.classList.remove("btn-secondary");
+            submitButton.classList.add("btn-primary");
         }
     });
 
