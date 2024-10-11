@@ -52,11 +52,11 @@
             background-color: #333333;
         }
 
-        #result {
-            margin-top: 20px;
-            font-size: 1.1em;
-            color: #0072ff;
-        }
+        /*#result {*/
+        /*    margin-top: 20px;*/
+        /*    font-size: 1.1em;*/
+        /*    color: #0072ff;*/
+        /*}*/
 
         .form-container {
             width: 100%;
@@ -213,6 +213,7 @@
         const jwtToken = localStorage.getItem('jwtToken');
 
         document.getElementById("spinner").style.display = "block";
+        document.getElementById("result").style.display = "none";
         document.getElementById("result").innerText = "";
 
         try {
@@ -229,12 +230,24 @@
 
             const data = await response.json();
             document.getElementById("spinner").style.display = "none";
-            document.getElementById("result").innerHTML = `您的服務網址是 <a href="${data.serviceUrl}" target="_blank">${data.serviceUrl}<a/>，並會在幾分鐘之內啟動。`;
+
+            if (data.error) {
+                document.getElementById("result").innerText = data.error;
+                document.getElementById("result").className = "alert alert-danger";
+                document.getElementById("result").style.display = "block";
+
+            } else {
+                document.getElementById("result").innerHTML = `以下是您的服務網址，服務會在幾分鐘內啟動。 <a href="${data.serviceUrl}" target="_blank">${data.serviceUrl}<a/>`;
+                document.getElementById("result").className = "alert alert-success";
+                document.getElementById("result").style.display = "block";
+            }
 
         } catch (error) {
             console.error("Error:", error);
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerText = "註冊失敗，請重試。";
+            document.getElementById("result").className = "alert alert-danger";
+            document.getElementById("result").style.display = "block";
         } finally {
             submitButton.disabled = false;
             submitButton.classList.remove("btn-secondary");
