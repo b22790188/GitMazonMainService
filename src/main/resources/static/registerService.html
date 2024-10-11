@@ -240,6 +240,9 @@
                 document.getElementById("result").innerHTML = `以下是您的服務網址，服務會在幾分鐘內啟動。 <a href="${data.serviceUrl}" target="_blank">${data.serviceUrl}<a/>`;
                 document.getElementById("result").className = "alert alert-success";
                 document.getElementById("result").style.display = "block";
+                const repoUrlSelect = document.getElementById("repoUrl");
+                const selectedOption = repoUrlSelect.options[repoUrlSelect.selectedIndex];
+                selectedOption.remove();
             }
 
         } catch (error) {
