@@ -114,23 +114,23 @@
         <div class="col-md-6 form-container">
             <form id="serviceForm" class="mb-4">
                 <div class="mb-3">
-                    <label for="serviceName" class="form-label">服務名稱：</label>
-                    <input type="text" class="form-control" id="serviceName" name="serviceName" required
-                           pattern="[A-Za-z]+" title="服務名稱只能包含英文字母">
-                </div>
-                <div class="mb-3">
                     <label for="repoUrl" class="form-label">GitHub Repo URL：</label>
                     <!--                    <input type="url" class="form-control" id="repoUrl" name="repoUrl" required>-->
                     <select class="form-select" id="repoUrl" name="repoUrl" required>
                         <option value="">請選擇一個 Repo</option>
                     </select>
                 </div>
+                <div class="mb-3">
+                    <label for="serviceName" class="form-label">服務名稱：</label>
+                    <input type="text" class="form-control" id="serviceName" name="serviceName" required
+                           pattern="[A-Za-z0-9]+" title="服務名稱只能包含大小寫英文字母及數字">
+                </div>
 
                 <div class="mb-3">
                     <label for="resourceConfig" class="form-label">資源配置：</label>
                     <select class="form-select" id="resourceConfig" name="resourceConfig" required>
-                        <option value="0.6,600">0.6 CPU / 600MB RAM</option>
                         <option value="0.3,300">0.3 CPU / 300MB RAM</option>
+                        <option value="0.6,600">0.6 CPU / 600MB RAM</option>
                     </select>
                 </div>
                 <input type="submit" class="btn btn-primary btn-block w-100" value="註冊">
@@ -273,6 +273,7 @@
     async function populateRepoOptions() {
         const jwtToken = localStorage.getItem('jwtToken');
         const repoUrlSelect = document.getElementById("repoUrl");
+        const serviceNameInput = document.getElementById("serviceName");
 
         try {
             const response = await fetch("https://masternode.gitmazon.com/api/github/repos", {
@@ -290,6 +291,15 @@
                     option.text = cloneUrl;
                     repoUrlSelect.appendChild(option);
                 });
+
+                repoUrlSelect.addEventListener("change", function () {
+                    if (repoUrlSelect.value) {
+                        const repoUrlParts = repoUrlSelect.value.split('/');
+                        const repoNameWithGit = repoUrlParts.pop();
+                        const repoName = repoNameWithGit.replace(".git", '');
+                        serviceNameInput.value = repoName;
+                    }
+                })
             } else {
                 console.error('Failed to fetch repositories');
             }
