@@ -9,8 +9,6 @@
     <style>
         /* Resource display area style */
         .resource-stats {
-            border-left: 1px solid #ccc;
-            padding-left: 20px;
             color: #333;
         }
 
@@ -25,6 +23,7 @@
             padding: 20px;
             border-radius: 8px;
             transition: box-shadow 0.3s;
+            margin-bottom: 20px;
         }
 
         .service-item:hover {
@@ -54,6 +53,20 @@
             position: relative;
             width: 100%;
             height: 150px;
+        }
+
+        @media (min-width: 768px) {
+            .service-info {
+                flex: 0 0 60%;
+                max-width: 60%;
+            }
+
+            .resource-stats {
+                flex: 0 0 40%;
+                max-width: 40%;
+                padding-left: 20px;
+                border-left: 1px solid #ccc;
+            }
         }
 
     </style>
@@ -156,47 +169,45 @@
 
             services.forEach(service => {
                 const serviceItem = document.createElement("div");
-                // serviceItem.classList.add("col-md-6", "mb-4"); // Use Bootstrap column format
+                serviceItem.classList.add("service-item");
                 serviceItem.innerHTML = `
-                <div class="service-item">
-                    <div>
-                        <p><strong>使用者名稱:</strong> ${service.username}</p>
-                        <p><strong>服務名稱:</strong> ${service.serviceName}</p>
-                        <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
-                        <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
-                    </div>
-                    <div class="resource-stats" id="stats-${service.containerName}">
-                        <p><strong>CPU 使用情況:</strong><span id="cpu-usage-${service.containerName}">0%</span></p>
-                        <div class="chart-container">
-                            <canvas id="cpu-chart-${service.containerName}"></canvas>
+                    <div class="row">
+                        <div class="col-md-8 service-info">
+                            <p><strong>使用者名稱:</strong> ${service.username}</p>
+                            <p><strong>服務名稱:</strong> ${service.serviceName}</p>
+                            <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
+                            <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
+                            <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
+                            <button class="unregisterButton btn btn-danger mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
+                            <button class="restartButton btn btn-warning mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">重啟</button>
                         </div>
-                        <p><strong>RAM 使用情況:</strong><span id="ram-usage-${service.containerName}">0 MB</span></p>
-                        <div class="chart-container">
-                            <canvas id="ram-chart-${service.containerName}"></canvas>
+                        <div class="col-md-4 resource-stats" id="stats-${service.containerName}">
+                            <p><strong>CPU 使用情況:</strong><span id="cpu-usage-${service.containerName}">0%</span></p>
+                            <div class="chart-container">
+                                <canvas id="cpu-chart-${service.containerName}"></canvas>
+                            </div>
+                            <p><strong>RAM 使用情況:</strong><span id="ram-usage-${service.containerName}">0 MB</span></p>
+                            <div class="chart-container">
+                                <canvas id="ram-chart-${service.containerName}"></canvas>
+                            </div>
                         </div>
                     </div>
-                    <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
-                    <button class="unregisterButton btn btn-danger mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
-                    <button class="restartButton btn btn-warning mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">重啟</button>
-                </div>
-            `;
+                `;
 
                 serviceList.appendChild(serviceItem);
 
                 // Initialize charts
                 initializeCharts(service.containerName);
 
-                // Bind SSH button
+                // Bind buttons
                 serviceItem.querySelector(".sshButton").addEventListener("click", function () {
                     openWebTerminal(service.username, service.repoName);
                 });
 
-                // Bind Unregister button
                 serviceItem.querySelector(".unregisterButton").addEventListener("click", function () {
                     unregisterService(service.username, service.repoName);
                 });
 
-                // Bind Restart button
                 serviceItem.querySelector(".restartButton").addEventListener("click", function () {
                     restartContainer(service.username, service.repoName);
                 });
