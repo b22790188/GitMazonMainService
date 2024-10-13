@@ -20,6 +20,9 @@
 
         .node-section {
             margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         /* Make Worker Node look more appealing */
@@ -31,12 +34,25 @@
         }
 
         /* Make service items more prominent */
+        .service-list {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
         .service-item {
             background-color: #f8f9fa;
             border: 1px solid #ddd;
             padding: 20px;
             border-radius: 8px;
             transition: box-shadow 0.3s;
+            flex: 1;
+            margin-right: 10px;
+            /* Ensure service items take the same height */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 200px; /* Adjust as needed */
         }
 
         .service-item:hover {
@@ -145,7 +161,7 @@
                     </div>
                 </div>
                 <button class="sshButton btn btn-secondary mt-3" data-ip="${workerNode.workerNodeIp}">SSH</button>
-                <div id="serviceList-${workerNode.workerNodeIp}" class="row">
+                <div id="serviceList-${workerNode.workerNodeIp}" class="service-list">
                     <!-- Services for this worker node will be filled here -->
                 </div>`;
 
@@ -169,7 +185,7 @@
                 if (workerNode.services.length > 0) {
                     workerNode.services.forEach(service => {
                         const serviceItem = document.createElement("div");
-                        serviceItem.classList.add("col-md-6", "mb-4"); // Use Bootstrap column format
+                        serviceItem.classList.add("service-item");
                         serviceItem.innerHTML = `
                         <div class="service-item">
                             <div>
@@ -188,8 +204,7 @@
                                     <canvas id="ram-chart-${service.containerName}"></canvas>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
 
                         serviceList.appendChild(serviceItem);
 
