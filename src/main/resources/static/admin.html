@@ -163,11 +163,11 @@
                     <button class="sshButton" data-ip="${workerNode.workerNodeIp}">SSH</button>
                 </div>
                 <div class="resource-stats">
-                    <p><strong>CPU 使用情況:</strong> <span id="cpu-usage-${workerNode.workerNodeIp}">0%</span></p>
+                    <p><strong>CPU :</strong> <span id="cpu-usage-${workerNode.workerNodeIp}">0%</span></p>
                     <div class="chart-container">
                         <canvas id="cpu-chart-${workerNode.workerNodeIp}"></canvas>
                     </div>
-                    <p><strong>RAM 使用情況:</strong> <span id="ram-usage-${workerNode.workerNodeIp}">0 MB</span></p>
+                    <p><strong>RAM :</strong> <span id="ram-usage-${workerNode.workerNodeIp}">0 MB</span></p>
                     <div class="chart-container">
                         <canvas id="ram-chart-${workerNode.workerNodeIp}"></canvas>
                     </div>
@@ -206,11 +206,11 @@
                                 <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
                             </div>
                             <div class="resource-stats">
-                                <p><strong>CPU 使用情況:</strong> <span id="cpu-usage-${service.containerName}">0%</span></p>
+                                <p><strong>CPU :</strong> <span id="cpu-usage-${service.containerName}">0%</span></p>
                                 <div class="chart-container">
                                     <canvas id="cpu-chart-${service.containerName}"></canvas>
                                 </div>
-                                <p><strong>RAM 使用情況:</strong> <span id="ram-usage-${service.containerName}">0 MB</span></p>
+                                <p><strong>RAM :</strong> <span id="ram-usage-${service.containerName}">0 MB</span></p>
                                 <div class="chart-container">
                                     <canvas id="ram-chart-${service.containerName}"></canvas>
                                 </div>

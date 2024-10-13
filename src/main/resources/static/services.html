@@ -9,11 +9,31 @@
     <style>
         /* Resource display area style */
         .resource-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             color: #333;
         }
 
-        .resource-stats p {
+        .stat-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+
+        .stat-block p {
             margin: 0;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         /* Service row */
@@ -59,12 +79,6 @@
         #terminal {
             height: 100%;
             width: 100%;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: 150px;
         }
 
     </style>
@@ -189,13 +203,17 @@
                     <!-- Collapsible Panel -->
                     <div id="collapse-${service.containerName}" class="collapse">
                         <div class="resource-stats">
-                            <p><strong>CPU 使用情況:</strong><span id="cpu-usage-${service.containerName}">0%</span></p>
-                            <div class="chart-container">
-                                <canvas id="cpu-chart-${service.containerName}"></canvas>
+                            <div class="stat-block">
+                                <p><strong>CPU :</strong><span id="cpu-usage-${service.containerName}">0%</span></p>
+                                <div class="chart-container">
+                                    <canvas id="cpu-chart-${service.containerName}"></canvas>
+                                </div>
                             </div>
-                            <p><strong>RAM 使用情況:</strong><span id="ram-usage-${service.containerName}">0 MB</span></p>
-                            <div class="chart-container">
-                                <canvas id="ram-chart-${service.containerName}"></canvas>
+                            <div class="stat-block">
+                                <p><strong>RAM :</strong><span id="ram-usage-${service.containerName}">0 MB</span></p>
+                                <div class="chart-container">
+                                    <canvas id="ram-chart-${service.containerName}"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
