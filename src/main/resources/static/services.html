@@ -16,23 +16,35 @@
             margin: 0;
         }
 
-        /* Make service items more prominent */
+        /* Service row */
         .service-item {
             background-color: #f8f9fa;
             border: 1px solid #ddd;
             padding: 20px;
             border-radius: 8px;
             transition: box-shadow 0.3s;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            position: relative;
+            cursor: pointer;
         }
 
         .service-item:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        /* Unify SSH button style */
-        .sshButton, .unregisterButton {
-            min-width: 80px;
+        /* Service action buttons */
+        .service-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Collapsible detail panel */
+        .collapse {
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-top: 1px solid #ddd;
+            border-radius: 0 0 8px 8px;
+            margin-top: -10px;
         }
 
         /* Modal terminal popup style */
@@ -55,25 +67,9 @@
             height: 150px;
         }
 
-        @media (min-width: 768px) {
-            .service-info {
-                flex: 0 0 60%;
-                max-width: 60%;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-            }
-
-            .service-buttons {
-                margin-top: auto;
-            }
-
-            .resource-stats {
-                flex: 0 0 40%;
-                max-width: 40%;
-                padding-left: 20px;
-                border-left: 1px solid #ccc;
-            }
+        /* Navbar background color correction */
+        .navbar-dark {
+            background-color: #343a40 !important; /* Restore default dark navbar */
         }
     </style>
 </head>
@@ -134,9 +130,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.7.0/lib/xterm-addon-fit.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-
-
     document.addEventListener('DOMContentLoaded', async function () {
         const jwtToken = localStorage.getItem('jwtToken');
         if (jwtToken) {
@@ -144,15 +140,15 @@
                 const response = await fetch('https://masternode.gitmazon.com/user', {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${jwtToken}` // Use JWT token as Authorization
+                        'Authorization': `Bearer ${jwtToken}`
                     }
                 });
 
                 if (response.ok) {
                     const userData = await response.json();
-                    const username = userData.username; // Assuming the backend returns data containing username
+                    const username = userData.username;
                     document.getElementById("navbarUsername").innerText = username;
-                    await fetchUserServices(username); // Use the obtained username to request services
+                    await fetchUserServices(username);
                     setupResourceWebSocket(username);
                 } else {
                     console.error('Failed to fetch user information');
@@ -175,21 +171,26 @@
 
             services.forEach(service => {
                 const serviceItem = document.createElement("div");
-                serviceItem.classList.add("service-item");
+                serviceItem.classList.add("service-item", "col-12");
+                serviceItem.setAttribute("data-bs-toggle", "collapse");
+                serviceItem.setAttribute("data-bs-target", `#collapse-${service.containerName}`);
                 serviceItem.innerHTML = `
-                    <div class="row">
-                        <div class="col-md-8 service-info">
-                            <p><strong>使用者名稱:</strong> ${service.username}</p>
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <div>
                             <p><strong>服務名稱:</strong> ${service.serviceName}</p>
                             <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
                             <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
-                            <div class="service-buttons">
-                                <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
-                                <button class="unregisterButton btn btn-danger mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
-                                <button class="restartButton btn btn-warning mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">重啟</button>
-                            </div>
                         </div>
-                        <div class="col-md-4 resource-stats" id="stats-${service.containerName}">
+                        <div class="service-buttons">
+                            <button class="sshButton btn btn-secondary" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
+                            <button class="unregisterButton btn btn-danger" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
+                            <button class="restartButton btn btn-warning" data-username="${service.username}" data-repo-name="${service.repoName}">重啟</button>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Panel -->
+                    <div id="collapse-${service.containerName}" class="collapse">
+                        <div class="resource-stats">
                             <p><strong>CPU 使用情況:</strong><span id="cpu-usage-${service.containerName}">0%</span></p>
                             <div class="chart-container">
                                 <canvas id="cpu-chart-${service.containerName}"></canvas>
@@ -246,7 +247,7 @@
                 scales: {
                     x: {
                         min: 0,
-                        max: 100,  // Set a lower max value to make small changes more visible
+                        max: 100
                     },
                     y: {beginAtZero: true}
                 }
@@ -270,7 +271,7 @@
                 scales: {
                     x: {
                         beginAtZero: true,
-                        max: 1000  // Adjust RAM max value accordingly
+                        max: 1000
                     },
                     y: {beginAtZero: true}
                 }
@@ -376,12 +377,10 @@
 
     function openWebTerminal(username, repoName) {
 
-        // If a terminal already exists, clear the previous content
         if (term) {
-            term.dispose(); // Clear previous terminal content
+            term.dispose();
         }
 
-        // Initialize terminal
         term = new Terminal();
 
         const socket = new WebSocket(`wss://gitmazon.com/terminal?username=${username}&repoName=${repoName}`);
@@ -393,11 +392,10 @@
         socket.onmessage = (event) => {
             term.write(event.data);
 
-            // Close the popup when receiving the exit command
             if (event.data.includes('exit')) {
                 socket.close();
                 modal.hide();
-                term.dispose(); // Clear terminal content
+                term.dispose();
             }
         };
 
