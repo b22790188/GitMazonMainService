@@ -59,6 +59,13 @@
             .service-info {
                 flex: 0 0 60%;
                 max-width: 60%;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .service-buttons {
+                margin-top: auto;
             }
 
             .resource-stats {
@@ -68,7 +75,6 @@
                 border-left: 1px solid #ccc;
             }
         }
-
     </style>
 </head>
 <body>
@@ -177,9 +183,11 @@
                             <p><strong>服務名稱:</strong> ${service.serviceName}</p>
                             <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
                             <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
-                            <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
-                            <button class="unregisterButton btn btn-danger mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
-                            <button class="restartButton btn btn-warning mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">重啟</button>
+                            <div class="service-buttons">
+                                <button class="sshButton btn btn-secondary mt-3" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
+                                <button class="unregisterButton btn btn-danger mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
+                                <button class="restartButton btn btn-warning mt-3 ms-2" data-username="${service.username}" data-repo-name="${service.repoName}">重啟</button>
+                            </div>
                         </div>
                         <div class="col-md-4 resource-stats" id="stats-${service.containerName}">
                             <p><strong>CPU 使用情況:</strong><span id="cpu-usage-${service.containerName}">0%</span></p>
@@ -366,14 +374,12 @@
         fitAddon.fit();
     })
 
-
     function openWebTerminal(username, repoName) {
 
         // If a terminal already exists, clear the previous content
         if (term) {
             term.dispose(); // Clear previous terminal content
         }
-
 
         // Initialize terminal
         term = new Terminal();
@@ -398,7 +404,6 @@
         socket.onerror = (error) => {
             console.error("WebSocket error:", error);
         };
-
 
         modal.show();
     }
