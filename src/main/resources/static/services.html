@@ -170,12 +170,14 @@
                 serviceItem.classList.add("service-item", "col-12");
                 serviceItem.setAttribute("data-bs-toggle", "collapse");
                 serviceItem.setAttribute("data-bs-target", `#collapse-${service.containerName}`);
+
+                // Create the inner content with service details
                 serviceItem.innerHTML = `
                     <div class="d-flex justify-content-between align-items-center w-100">
                         <div>
                             <p><strong>服務名稱:</strong> ${service.serviceName}</p>
                             <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
-                            <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
+                            <p><strong>Service URL:</strong> <a href="${service.endpoint}" class="service-url" target="_blank">${service.endpoint}</a></p>
                         </div>
                         <div class="service-buttons">
                             <button class="sshButton btn btn-secondary" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
@@ -204,7 +206,14 @@
                 // Initialize charts
                 initializeCharts(service.containerName);
 
-                // Bind buttons
+                // Bind buttons and prevent card collapse on link click
+                const serviceUrl = serviceItem.querySelector('.service-url');
+                serviceUrl.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    window.open(serviceUrl.href, '_blank');
+                });
+
+                // Bind other buttons as necessary
                 serviceItem.querySelector(".sshButton").addEventListener("click", function () {
                     openWebTerminal(service.username, service.repoName);
                 });
