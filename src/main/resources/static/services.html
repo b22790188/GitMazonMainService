@@ -32,8 +32,8 @@
             width: 100%;
             height: 150px;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: center; /* 讓 canvas 居中 */
+            align-items: center; /* 確保垂直方向也居中對齊 */
         }
 
         /* Service row */
@@ -52,19 +52,13 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        /* Service action buttons */
-        .service-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
         /* Collapsible detail panel */
         .service-item .collapse {
             padding: 20px;
             background-color: #f0f0f0;
-            border-top: 1px solid #ddd;
-            border-radius: 0 0 8px 8px;
+            border-radius: 8px;
             margin-top: -10px;
+            transition: background-color 0.3s ease-in-out;
         }
 
         /* Modal terminal popup style */
