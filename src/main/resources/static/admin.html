@@ -25,12 +25,36 @@
             justify-content: space-between;
         }
 
-        /* Make Worker Node look more appealing */
-        .node-section h4 {
+        /* Flex container for the worker node heading and SSH button */
+        .node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             background-color: #343a40;
             color: white;
             padding: 10px;
             border-radius: 8px;
+            margin-bottom: 20px; /* Adds spacing between the block and other content */
+        }
+
+        /* Style the Worker Node IP to align on the left */
+        .node-header h4 {
+            margin: 0;
+            flex: 1;
+        }
+
+        /* Align the SSH button on the far right */
+        .sshButton {
+            background-color: #6c757d;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .sshButton:hover {
+            background-color: #5a6268;
         }
 
         /* Make service items more prominent */
@@ -57,11 +81,6 @@
 
         .service-item:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Unify SSH button style */
-        .sshButton {
-            min-width: 80px;
         }
 
         /* Modal terminal popup style */
@@ -94,16 +113,6 @@
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="services.html">User Services</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="adminPage.html">Worker Nodes</a>
-                </li>
-            </ul>
-        </div>
     </div>
 </nav>
 
@@ -149,7 +158,10 @@
 
                 // Render Worker Node CPU and RAM usage charts even if there are no services
                 nodeSection.innerHTML = `
-                <h4>Worker Node IP: ${workerNode.workerNodeIp}</h4>
+                <div class="node-header">
+                    <h4>Worker Node IP: ${workerNode.workerNodeIp}</h4>
+                    <button class="sshButton" data-ip="${workerNode.workerNodeIp}">SSH</button>
+                </div>
                 <div class="resource-stats">
                     <p><strong>CPU 使用情況:</strong> <span id="cpu-usage-${workerNode.workerNodeIp}">0%</span></p>
                     <div class="chart-container">
@@ -160,7 +172,6 @@
                         <canvas id="ram-chart-${workerNode.workerNodeIp}"></canvas>
                     </div>
                 </div>
-                <button class="sshButton btn btn-secondary mt-3" data-ip="${workerNode.workerNodeIp}">SSH</button>
                 <div id="serviceList-${workerNode.workerNodeIp}" class="service-list">
                     <!-- Services for this worker node will be filled here -->
                 </div>`;
