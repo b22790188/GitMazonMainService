@@ -32,8 +32,10 @@
             width: 100%;
             height: 150px;
             display: flex;
-            justify-content: center; /* 讓 canvas 居中 */
-            align-items: center; /* 確保垂直方向也居中對齊 */
+            justify-content: center;
+            align-items: center;
+            opacity: 0; /* Hide charts initially */
+            transition: opacity 0.3s ease-in-out;
         }
 
         /* Service row */
@@ -58,7 +60,8 @@
             background-color: #f0f0f0;
             border-radius: 8px;
             margin-top: -10px;
-            transition: background-color 0.3s ease-in-out;
+            transition: background-color 0.3s ease-in-out, margin-top 0.3s ease-in-out;
+            overflow: hidden; /* Prevent content from showing before expansion */
         }
 
         /* Modal terminal popup style */
@@ -215,9 +218,6 @@
 
                 serviceList.appendChild(serviceItem);
 
-                // Initialize charts
-                initializeCharts(service.containerName);
-
                 // Bind buttons and prevent card collapse on link click
                 const serviceUrl = serviceItem.querySelector('.service-url');
                 serviceUrl.addEventListener('click', function (event) {
@@ -226,16 +226,40 @@
                 });
 
                 // Bind other buttons as necessary
-                serviceItem.querySelector(".sshButton").addEventListener("click", function () {
+                serviceItem.querySelector(".sshButton").addEventListener("click", function (event) {
+                    event.stopPropagation();
                     openWebTerminal(service.username, service.repoName);
                 });
 
-                serviceItem.querySelector(".unregisterButton").addEventListener("click", function () {
+                serviceItem.querySelector(".unregisterButton").addEventListener("click", function (event) {
+                    event.stopPropagation();
                     unregisterService(service.username, service.repoName);
                 });
 
-                serviceItem.querySelector(".restartButton").addEventListener("click", function () {
+                serviceItem.querySelector(".restartButton").addEventListener("click", function (event) {
+                    event.stopPropagation();
                     restartContainer(service.username, service.repoName);
+                });
+
+                // Add event listeners for collapse events
+                const collapseElement = serviceItem.querySelector(`#collapse-${service.containerName}`);
+                collapseElement.addEventListener('shown.bs.collapse', function () {
+                    // Initialize charts after collapse is fully shown
+                    initializeCharts(service.containerName);
+
+                    // Fade in the charts
+                    const chartContainers = collapseElement.querySelectorAll('.chart-container');
+                    chartContainers.forEach(container => {
+                        container.style.opacity = '1';
+                    });
+                });
+
+                collapseElement.addEventListener('hide.bs.collapse', function () {
+                    // Fade out the charts
+                    const chartContainers = collapseElement.querySelectorAll('.chart-container');
+                    chartContainers.forEach(container => {
+                        container.style.opacity = '0';
+                    });
                 });
             });
         } catch (error) {
@@ -246,6 +270,10 @@
     function initializeCharts(containerName) {
         const ctxCpu = document.getElementById(`cpu-chart-${containerName}`).getContext('2d');
         const ctxRam = document.getElementById(`ram-chart-${containerName}`).getContext('2d');
+
+        if (Chart.getChart(`cpu-chart-${containerName}`)) {
+            return; // Charts already initialized
+        }
 
         const cpuChart = new Chart(ctxCpu, {
             type: 'bar',
@@ -267,7 +295,9 @@
                         max: 100
                     },
                     y: {beginAtZero: true}
-                }
+                },
+                responsive: true,
+                maintainAspectRatio: false
             }
         });
 
@@ -291,11 +321,11 @@
                         max: 1000
                     },
                     y: {beginAtZero: true}
-                }
+                },
+                responsive: true,
+                maintainAspectRatio: false
             }
         });
-
-        return {cpuChart, ramChart};
     }
 
     function setupResourceWebSocket(username) {
