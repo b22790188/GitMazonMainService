@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        /* 您原有的 CSS 內容 */
         body, html {
             margin: 0;
             padding: 0;
@@ -99,6 +100,7 @@
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- 您原有的導航欄內容 -->
     <div class="container-fluid">
         <a class="navbar-brand" href="index.html">GitMazon</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -131,6 +133,7 @@
 </nav>
 
 <div class="container">
+    <!-- 您原有的頁面內容 -->
     <div class="row justify-content-center">
         <div class="col-md-6 text-center">
             <h1>新增服務</h1>
@@ -177,36 +180,41 @@
     document.addEventListener('DOMContentLoaded', async function () {
         const urlParams = new URLSearchParams(window.location.search);
         const username = urlParams.get('username');
+        const jwtToken = localStorage.getItem('jwtToken');
+
         if (username) {
+            // 有 username，表示剛登入，取得 JWT Token
             document.getElementById("navbarUsername").innerText = username;
             await getJwtToken(username);
             await populateRepoOptions();
-        } else {
-            const jwtToken = localStorage.getItem('jwtToken');
-            if (jwtToken) {
-                try {
-                    const response = await fetch('https://masternode.gitmazon.com/user', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${jwtToken}`
-                        }
-                    })
-
-                    if (response.ok) {
-                        const userData = await response.json();
-                        document.getElementById('navbarUsername').innerText = userData.username;
-                        await populateRepoOptions();
-                        console.log('get options');
-
-                    } else {
-                        console.error('Failed to fetch user information');
+        } else if (jwtToken) {
+            // 有 JWT Token，驗證是否有效
+            try {
+                const response = await fetch('https://masternode.gitmazon.com/user', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
                     }
-                } catch (error) {
-                    console.error('Error fetching user information', error);
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    document.getElementById('navbarUsername').innerText = userData.username;
+                    await populateRepoOptions();
+                    console.log('取得選項');
+                } else {
+                    // JWT Token 無效，移除並重導向登入頁面
+                    localStorage.removeItem('jwtToken');
+                    window.location.href = 'index.html';
                 }
-            } else {
-                console.error('JWT token not found');
+            } catch (error) {
+                console.error('取得使用者資訊時發生錯誤', error);
+                localStorage.removeItem('jwtToken');
+                window.location.href = 'index.html';
             }
+        } else {
+            // 無 username 也無 JWT Token，重導向登入頁面
+            window.location.href = 'index.html';
         }
     });
 
@@ -282,9 +290,11 @@
             const response = await fetch(`https://masternode.gitmazon.com/generateJwtToken?username=${username}`);
             const jwtToken = await response.text();
             localStorage.setItem('jwtToken', jwtToken);
-            console.log('JWT Token stored in localStorage');
+            console.log('JWT Token 已儲存在 localStorage');
         } catch (error) {
-            console.error('Error generating JWT Token:', error);
+            console.error('取得 JWT Token 時發生錯誤:', error);
+            // 如果無法取得 JWT Token，重導向登入頁面
+            window.location.href = 'index.html';
         }
     }
 
