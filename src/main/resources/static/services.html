@@ -34,7 +34,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            /* Removed opacity and transition to display charts immediately */
         }
 
         /* Service row */
@@ -145,6 +144,66 @@
             background-color: #e0a800;
         }
 
+        /* Navbar */
+        nav.navbar {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        .navbar-nav {
+            flex-grow: 1;
+            justify-content: flex-start; /* left align */
+        }
+
+        .navbar-text {
+            margin-left: auto;
+        }
+
+        .navbar .login-btn-navbar {
+            background-color: #333333;
+            padding: 8px 16px;
+            border-radius: 5px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .navbar .login-btn-navbar:hover {
+            background-color: #555555;
+            color: white;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Modal button styles */
+        .modal .btn-primary {
+            background-color: #333333;
+            border: none;
+        }
+
+        .modal .btn-primary:hover {
+            background-color: #555555;
+        }
+
+        /* New dropdown menu styles */
+        .dropdown-menu {
+            min-width: 100px;
+            background-color: #212529;
+        }
+
+        .dropdown-item {
+            color: rgba(255, 255, 255, 0.55);
+            padding: 0.25rem 1rem;
+        }
+
+        .dropdown-item:hover, .dropdown-item:focus {
+            color: rgba(255, 255, 255, 0.75);
+            background-color: transparent;
+        }
+
     </style>
 </head>
 <body>
@@ -162,13 +221,27 @@
                     <a class="nav-link" href="index.html">首頁</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="registerService.html">註冊服務</a>
+                    <a class="nav-link" href="registerService.html" id="registerServiceLink">註冊服務</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="services.html" id="serviceLink">我的服務</a>
                 </li>
             </ul>
-            <span id="navbarUsername" class="navbar-text text-light"></span>
+            <!-- 登入狀態動態顯示 -->
+            <div class="dropdown ms-auto" id="navbarDropdown" style="display: none;">
+                <span id="navbarUsername" class="navbar-text text-light dropdown-toggle" role="button"
+                      data-bs-toggle="dropdown" aria-expanded="false">
+                    使用者名稱
+                </span>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="logoutBtn">登出</a></li>
+                </ul>
+            </div>
+            <span id="loginButton" class="navbar-text text-light">
+                <a href="https://masternode.gitmazon.com/oauth2/authorization/github" class="login-btn-navbar">
+                    登入
+                </a>
+            </span>
         </div>
     </div>
 </nav>
@@ -201,6 +274,26 @@
     </div>
 </div>
 
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">請先登入</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                您需要先登入才能使用這些功能。
+            </div>
+            <div class="modal-footer">
+                <a href="https://masternode.gitmazon.com/oauth2/authorization/github"
+                   class="btn btn-primary">立即登入</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.7.0/lib/xterm-addon-fit.js"></script>
@@ -208,7 +301,36 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', async function () {
-        const jwtToken = localStorage.getItem('jwtToken');
+        let jwtToken = localStorage.getItem('jwtToken');
+        let username;
+        const loginButton = document.getElementById('loginButton');
+        const navbarDropdown = document.getElementById('navbarDropdown');
+        const registerServiceLink = document.getElementById('registerServiceLink');
+        const serviceLink = document.getElementById('serviceLink');
+
+        const showLoginModal = () => {
+            var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            loginModal.show();
+        };
+
+        registerServiceLink.addEventListener('click', function (event) {
+            if (!jwtToken) {
+                event.preventDefault();
+                showLoginModal();
+            } else {
+                window.location.href = "registerService.html";
+            }
+        });
+
+        serviceLink.addEventListener('click', function (event) {
+            if (!jwtToken) {
+                event.preventDefault();
+                showLoginModal();
+            } else {
+                window.location.href = `services.html?username=${username}`;
+            }
+        });
+
         if (jwtToken) {
             try {
                 const response = await fetch('https://masternode.gitmazon.com/user', {
@@ -220,19 +342,37 @@
 
                 if (response.ok) {
                     const userData = await response.json();
-                    const username = userData.username;
+                    username = userData.username;
                     document.getElementById("navbarUsername").innerText = username;
+                    loginButton.style.display = 'none';
+                    navbarDropdown.style.display = 'block';
                     await fetchUserServices(username);
                     setupResourceWebSocket(username);
                 } else {
                     console.error('Failed to fetch user information');
+                    localStorage.removeItem('jwtToken');
+                    jwtToken = null;
+                    loginButton.style.display = 'block';
+                    navbarDropdown.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Error fetching user information:', error);
+                localStorage.removeItem('jwtToken');
+                jwtToken = null;
+                loginButton.style.display = 'block';
+                navbarDropdown.style.display = 'none';
             }
         } else {
             console.error('JWT token not found');
+            loginButton.style.display = 'block';
+            navbarDropdown.style.display = 'none';
         }
+
+        document.getElementById('logoutBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            localStorage.removeItem('jwtToken');
+            window.location.href = 'index.html';
+        });
     });
 
     async function fetchUserServices(username) {
