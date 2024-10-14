@@ -48,6 +48,10 @@
             margin-bottom: 20px;
         }
 
+        .node-section {
+            margin-bottom: 30px;
+        }
+
         .sshButton {
             background-color: #6c757d;
             border: none;
@@ -67,40 +71,70 @@
         }
 
         .service-list {
-            display: flex;
-            flex-wrap: wrap;
             margin-top: 20px;
         }
 
         .service-item {
             background-color: #f8f9fa;
             border: 1px solid #ddd;
-            padding: 20px;
+            padding: 15px 20px;
             border-radius: 8px;
-            transition: box-shadow 0.3s;
-            flex: 1;
-            margin-right: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 200px;
+            transition: box-shadow 0.3s, background-color 0.3s;
+            margin-bottom: 10px;
+            position: relative;
+            cursor: pointer;
         }
 
         .service-item:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        #terminalModal .modal-dialog {
-            max-width: 80vw;
+        .service-details {
+            background-color: #e9ecef;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 10px;
         }
 
-        #terminalModal .modal-content {
-            height: 70vh;
+        .service-item .service-header {
+            display: flex;
+            align-items: center;
         }
 
-        #terminal {
-            height: 100%;
-            width: 100%;
+        .service-item .service-header h5 {
+            margin: 0;
+            flex: 1;
+        }
+
+        .service-item .service-content {
+            margin-top: 10px;
+        }
+
+        /* 調整折疊動畫的過渡效果 */
+        .collapse:not(.show) {
+            display: block;
+            height: 0;
+            overflow: hidden;
+            transition: height 0.35s ease;
+        }
+
+        .collapse.show {
+            height: auto;
+            transition: height 0.35s ease;
+        }
+
+        /* 調整箭頭指示符 */
+        .service-item .arrow-icon {
+            margin-left: auto;
+            transition: transform 0.35s ease;
+        }
+
+        .service-item .arrow-icon.collapsed {
+            transform: rotate(0deg);
+        }
+
+        .service-item .arrow-icon.expanded {
+            transform: rotate(180deg);
         }
     </style>
 </head>
@@ -206,24 +240,28 @@
                         const serviceItem = document.createElement("div");
                         serviceItem.classList.add("service-item");
                         serviceItem.innerHTML = `
-                        <div class="service-item">
-                            <div>
-                                <p><strong>Username:</strong> ${service.username}</p>
-                                <p><strong>Service Name:</strong> ${service.serviceName}</p>
-                                <p><strong>Repo Name:</strong> ${service.repoName}</p>
-                                <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
-                            </div>
-                            <div class="resource-stats">
-                                <div class="stat-block">
-                                    <p><strong>CPU :</strong> <span id="cpu-usage-${service.containerName}">0%</span></p>
-                                    <div class="chart-container">
-                                        <canvas id="cpu-chart-${service.containerName}"></canvas>
-                                    </div>
-                                </div>
-                                <div class="stat-block">
-                                    <p><strong>RAM :</strong> <span id="ram-usage-${service.containerName}">0 MB</span></p>
-                                    <div class="chart-container">
-                                        <canvas id="ram-chart-${service.containerName}"></canvas>
+                        <div class="service-header" data-bs-toggle="collapse" data-bs-target="#collapse-${service.containerName}">
+                            <h5>${service.username} / ${service.serviceName}</h5>
+                            <span class="arrow-icon collapsed">&#9660;</span>
+                        </div>
+                        <div id="collapse-${service.containerName}" class="collapse">
+                            <div class="service-details">
+                                <div class="service-content">
+                                    <p><strong>Repo Name:</strong> ${service.repoName}</p>
+                                    <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
+                                    <div class="resource-stats">
+                                        <div class="stat-block">
+                                            <p><strong>CPU :</strong> <span id="cpu-usage-${service.containerName}">0%</span></p>
+                                            <div class="chart-container">
+                                                <canvas id="cpu-chart-${service.containerName}"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="stat-block">
+                                            <p><strong>RAM :</strong> <span id="ram-usage-${service.containerName}">0 MB</span></p>
+                                            <div class="chart-container">
+                                                <canvas id="ram-chart-${service.containerName}"></canvas>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -231,22 +269,48 @@
 
                         serviceList.appendChild(serviceItem);
 
-                        charts[`cpu-${service.containerName}`] = initializeChart(
-                            `cpu-chart-${service.containerName}`,
-                            'CPU Usage (%)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(75, 192, 192, 1)',
-                            100,
-                            false
-                        );
-                        charts[`ram-${service.containerName}`] = initializeChart(
-                            `ram-chart-${service.containerName}`,
-                            'RAM Usage (MB)',
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(255, 99, 132, 1)',
-                            1000,
-                            true
-                        );
+                        // Initialize charts when the collapsible section is shown
+                        const collapseElement = serviceItem.querySelector(`#collapse-${service.containerName}`);
+                        collapseElement.addEventListener('shown.bs.collapse', function () {
+                            if (!charts[`cpu-${service.containerName}`]) {
+                                charts[`cpu-${service.containerName}`] = initializeChart(
+                                    `cpu-chart-${service.containerName}`,
+                                    'CPU Usage (%)',
+                                    'rgba(75, 192, 192, 0.2)',
+                                    'rgba(75, 192, 192, 1)',
+                                    100,
+                                    false
+                                );
+                            }
+                            if (!charts[`ram-${service.containerName}`]) {
+                                charts[`ram-${service.containerName}`] = initializeChart(
+                                    `ram-chart-${service.containerName}`,
+                                    'RAM Usage (MB)',
+                                    'rgba(255, 99, 132, 0.2)',
+                                    'rgba(255, 99, 132, 1)',
+                                    1000,
+                                    true
+                                );
+                            }
+
+                            // 改變箭頭方向
+                            const arrowIcon = serviceItem.querySelector('.arrow-icon');
+                            arrowIcon.classList.remove('collapsed');
+                            arrowIcon.classList.add('expanded');
+                        });
+
+                        collapseElement.addEventListener('hidden.bs.collapse', function () {
+                            // 恢復箭頭方向
+                            const arrowIcon = serviceItem.querySelector('.arrow-icon');
+                            arrowIcon.classList.remove('expanded');
+                            arrowIcon.classList.add('collapsed');
+                        });
+
+                        // 防止點擊連結時觸發折疊
+                        const serviceUrl = serviceItem.querySelector('a');
+                        serviceUrl.addEventListener('click', function (event) {
+                            event.stopPropagation();
+                        });
                     });
                 }
             });
@@ -356,16 +420,16 @@
         term.loadAddon(fitAddon);
         term.open(terminalElement);
         fitAddon.fit();
-    })
+    });
 
-    function openWebTerminal(workerNodeIp) {
+    function openWebTerminal(identifier) {
         if (term) {
             term.dispose();
         }
 
         term = new Terminal();
 
-        const socket = new WebSocket(`wss://gitmazon.com/terminal?ip=${workerNodeIp}`);
+        const socket = new WebSocket(`wss://gitmazon.com/terminal?ip=${identifier}`);
 
         term.onData(function (data) {
             socket.send(data);
@@ -374,7 +438,7 @@
         socket.onmessage = (event) => {
             term.write(event.data);
 
-            if (event.data.includes('logout')) {
+            if (event.data.includes('exit')) {
                 socket.close();
                 modal.hide();
                 term.dispose();
