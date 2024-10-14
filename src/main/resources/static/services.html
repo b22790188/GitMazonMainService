@@ -65,6 +65,7 @@
         .service-item .service-header {
             display: flex;
             align-items: center;
+            position: relative;
             cursor: pointer;
         }
 
@@ -92,7 +93,9 @@
 
         /* Arrow icon styles */
         .service-item .arrow-icon {
-            margin-left: auto;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
             transition: transform 0.35s ease;
         }
 
@@ -246,10 +249,7 @@
                 serviceItem.classList.add("service-item", "col-12");
 
                 serviceItem.innerHTML = `
-                    <div class="service-header" data-bs-toggle="collapse" data-bs-target="#collapse-${service.containerName}">
-                        <span class="arrow-icon collapsed">&#9660;</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center w-100">
+                    <div class="service-header d-flex justify-content-between align-items-center w-100" data-bs-toggle="collapse" data-bs-target="#collapse-${service.containerName}">
                         <div>
                             <p><strong>服務名稱:</strong> ${service.serviceName}</p>
                             <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
@@ -260,8 +260,8 @@
                             <button class="unregisterButton" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
                             <button class="restartButton" data-username="${service.username}" data-repo-name="${service.repoName}">重啟</button>
                         </div>
+                        <span class="arrow-icon collapsed">&#9660;</span>
                     </div>
-
                     <div id="collapse-${service.containerName}" class="collapse">
                         <div class="service-details">
                             <div class="service-content">
