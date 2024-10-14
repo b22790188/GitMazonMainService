@@ -34,8 +34,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            opacity: 0; /* Hide charts initially */
-            transition: opacity 0.3s ease-in-out;
+            /* Removed opacity and transition to display charts immediately */
         }
 
         /* Service row */
@@ -78,15 +77,15 @@
             margin-top: 10px;
         }
 
-        /* Adjusting collapse animations */
-        .collapse:not(.show) {
+        /* Adjusting collapse animations specifically for service items */
+        .service-item .collapse:not(.show) {
             display: block;
             height: 0;
             overflow: hidden;
             transition: height 0.35s ease;
         }
 
-        .collapse.show {
+        .service-item .collapse.show {
             height: auto;
             transition: height 0.35s ease;
         }
@@ -315,12 +314,6 @@
                     // Initialize charts after collapse is fully shown
                     initializeCharts(service.containerName);
 
-                    // Fade in the charts
-                    const chartContainers = collapseElement.querySelectorAll('.chart-container');
-                    chartContainers.forEach(container => {
-                        container.style.opacity = '1';
-                    });
-
                     // Change arrow direction
                     const arrowIcon = serviceItem.querySelector('.arrow-icon');
                     arrowIcon.classList.remove('collapsed');
@@ -328,12 +321,6 @@
                 });
 
                 collapseElement.addEventListener('hidden.bs.collapse', function () {
-                    // Fade out the charts
-                    const chartContainers = collapseElement.querySelectorAll('.chart-container');
-                    chartContainers.forEach(container => {
-                        container.style.opacity = '0';
-                    });
-
                     // Reset arrow direction
                     const arrowIcon = serviceItem.querySelector('.arrow-icon');
                     arrowIcon.classList.remove('expanded');
