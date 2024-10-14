@@ -176,10 +176,24 @@
                 workerNodeList.appendChild(nodeSection);
 
                 if (!charts[`cpu-${workerNode.workerNodeIp}`]) {
-                    charts[`cpu-${workerNode.workerNodeIp}`] = initializeChart(`cpu-chart-${workerNode.workerNodeIp}`, '', 'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 100, false);
+                    charts[`cpu-${workerNode.workerNodeIp}`] = initializeChart(
+                        `cpu-chart-${workerNode.workerNodeIp}`,
+                        'CPU Usage (%)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(75, 192, 192, 1)',
+                        100,
+                        false
+                    );
                 }
                 if (!charts[`ram-${workerNode.workerNodeIp}`]) {
-                    charts[`ram-${workerNode.workerNodeIp}`] = initializeChart(`ram-chart-${workerNode.workerNodeIp}`, '', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000, true);
+                    charts[`ram-${workerNode.workerNodeIp}`] = initializeChart(
+                        `ram-chart-${workerNode.workerNodeIp}`,
+                        'RAM Usage (MB)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 99, 132, 1)',
+                        1000,
+                        true
+                    );
                 }
 
                 nodeSection.querySelector(".sshButton").addEventListener("click", function () {
@@ -217,8 +231,22 @@
 
                         serviceList.appendChild(serviceItem);
 
-                        charts[`cpu-${service.containerName}`] = initializeChart(`cpu-chart-${service.containerName}`, '', 'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 100, false);
-                        charts[`ram-${service.containerName}`] = initializeChart(`ram-chart-${service.containerName}`, '', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000, true);
+                        charts[`cpu-${service.containerName}`] = initializeChart(
+                            `cpu-chart-${service.containerName}`,
+                            'CPU Usage (%)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(75, 192, 192, 1)',
+                            100,
+                            false
+                        );
+                        charts[`ram-${service.containerName}`] = initializeChart(
+                            `ram-chart-${service.containerName}`,
+                            'RAM Usage (MB)',
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(255, 99, 132, 1)',
+                            1000,
+                            true
+                        );
                     });
                 }
             });
@@ -234,7 +262,7 @@
         return new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: [label],
+                labels: [''],
                 datasets: [{
                     label: label,
                     data: [0],
@@ -254,7 +282,7 @@
                         ticks: {
                             precision: 0,
                             callback: function (value) {
-                                return value;  // No '%' sign for either CPU or RAM now
+                                return value;
                             }
                         }
                     },
@@ -264,7 +292,8 @@
                 },
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        position: 'top'
                     }
                 }
             }
@@ -288,7 +317,7 @@
 
             const cpuChartKey = `cpu-${identifier}`;
             if (charts[cpuChartKey]) {
-                updateChart(cpuChartKey, cpu, 10);
+                updateChart(cpuChartKey, cpu, 100);
                 document.getElementById(`cpu-usage-${identifier}`).innerText = `${cpu}%`;
             }
 
