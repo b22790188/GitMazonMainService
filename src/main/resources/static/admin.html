@@ -7,25 +7,36 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Resource display area style */
         .resource-stats {
-            border-left: 1px solid #ccc;
-            padding-left: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             color: #333;
+            margin-top: 20px;
         }
 
-        .resource-stats p {
-            margin: 0 0 10px 0;
-        }
-
-        .node-section {
-            margin-bottom: 40px;
+        .stat-block {
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            align-items: center;
+            width: 45%;
         }
 
-        /* Flex container for the worker node heading and SSH button */
+        .stat-block p {
+            margin: 0;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+        }
+
         .node-header {
             display: flex;
             justify-content: space-between;
@@ -34,16 +45,9 @@
             color: white;
             padding: 10px;
             border-radius: 8px;
-            margin-bottom: 20px; /* Adds spacing between the block and other content */
+            margin-bottom: 20px;
         }
 
-        /* Style the Worker Node IP to align on the left */
-        .node-header h4 {
-            margin: 0;
-            flex: 1;
-        }
-
-        /* Align the SSH button on the far right */
         .sshButton {
             background-color: #6c757d;
             border: none;
@@ -57,7 +61,11 @@
             background-color: #5a6268;
         }
 
-        /* Make service items more prominent */
+        .node-header h4 {
+            margin: 0;
+            flex: 1;
+        }
+
         .service-list {
             display: flex;
             flex-wrap: wrap;
@@ -72,18 +80,16 @@
             transition: box-shadow 0.3s;
             flex: 1;
             margin-right: 10px;
-            /* Ensure service items take the same height */
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            min-height: 200px; /* Adjust as needed */
+            min-height: 200px;
         }
 
         .service-item:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        /* Modal terminal popup style */
         #terminalModal .modal-dialog {
             max-width: 80vw;
         }
@@ -96,16 +102,9 @@
             height: 100%;
             width: 100%;
         }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: 150px;
-        }
     </style>
 </head>
 <body>
-<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="index.html">GitMazon Admin</a>
@@ -118,12 +117,9 @@
 
 <div class="container mt-4">
     <h2>Worker Nodes</h2>
-    <div id="workerNodeList" class="mb-5">
-        <!-- Worker nodes and services will be dynamically filled here -->
-    </div>
+    <div id="workerNodeList" class="mb-5"></div>
 </div>
 
-<!-- Terminal Modal popup -->
 <div class="modal fade" id="terminalModal" tabindex="-1" aria-labelledby="terminalModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -142,7 +138,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.7.0/lib/xterm-addon-fit.js"></script>
 <script>
-    const charts = {}; // Object to hold all chart instances
+    const charts = {};
 
     document.addEventListener('DOMContentLoaded', async function () {
         try {
@@ -156,42 +152,40 @@
                 const nodeSection = document.createElement("div");
                 nodeSection.classList.add("node-section");
 
-                // Render Worker Node CPU and RAM usage charts even if there are no services
                 nodeSection.innerHTML = `
                 <div class="node-header">
                     <h4>Worker Node IP: ${workerNode.workerNodeIp}</h4>
                     <button class="sshButton" data-ip="${workerNode.workerNodeIp}">SSH</button>
                 </div>
                 <div class="resource-stats">
-                    <p><strong>CPU :</strong> <span id="cpu-usage-${workerNode.workerNodeIp}">0%</span></p>
-                    <div class="chart-container">
-                        <canvas id="cpu-chart-${workerNode.workerNodeIp}"></canvas>
+                    <div class="stat-block">
+                        <p><strong>CPU :</strong> <span id="cpu-usage-${workerNode.workerNodeIp}">0%</span></p>
+                        <div class="chart-container">
+                            <canvas id="cpu-chart-${workerNode.workerNodeIp}"></canvas>
+                        </div>
                     </div>
-                    <p><strong>RAM :</strong> <span id="ram-usage-${workerNode.workerNodeIp}">0 MB</span></p>
-                    <div class="chart-container">
-                        <canvas id="ram-chart-${workerNode.workerNodeIp}"></canvas>
+                    <div class="stat-block">
+                        <p><strong>RAM :</strong> <span id="ram-usage-${workerNode.workerNodeIp}">0 MB</span></p>
+                        <div class="chart-container">
+                            <canvas id="ram-chart-${workerNode.workerNodeIp}"></canvas>
+                        </div>
                     </div>
                 </div>
-                <div id="serviceList-${workerNode.workerNodeIp}" class="service-list">
-                    <!-- Services for this worker node will be filled here -->
-                </div>`;
+                <div id="serviceList-${workerNode.workerNodeIp}" class="service-list"></div>`;
 
                 workerNodeList.appendChild(nodeSection);
 
-                // Initialize CPU and RAM charts for each Worker Node
                 if (!charts[`cpu-${workerNode.workerNodeIp}`]) {
-                    charts[`cpu-${workerNode.workerNodeIp}`] = initializeChart(`cpu-chart-${workerNode.workerNodeIp}`, 'CPU Usage (%)', 'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 100);
+                    charts[`cpu-${workerNode.workerNodeIp}`] = initializeChart(`cpu-chart-${workerNode.workerNodeIp}`, '', 'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 100, false);
                 }
                 if (!charts[`ram-${workerNode.workerNodeIp}`]) {
-                    charts[`ram-${workerNode.workerNodeIp}`] = initializeChart(`ram-chart-${workerNode.workerNodeIp}`, 'RAM Usage (MB)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000);
+                    charts[`ram-${workerNode.workerNodeIp}`] = initializeChart(`ram-chart-${workerNode.workerNodeIp}`, '', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000, true);
                 }
 
-                // Bind SSH button for Worker Node
                 nodeSection.querySelector(".sshButton").addEventListener("click", function () {
                     openWebTerminal(workerNode.workerNodeIp);
                 });
 
-                // Render services under each Worker Node if they exist
                 const serviceList = document.getElementById(`serviceList-${workerNode.workerNodeIp}`);
                 if (workerNode.services.length > 0) {
                     workerNode.services.forEach(service => {
@@ -206,22 +200,25 @@
                                 <p><strong>Service URL:</strong> <a href="${service.endpoint}" target="_blank">${service.endpoint}</a></p>
                             </div>
                             <div class="resource-stats">
-                                <p><strong>CPU :</strong> <span id="cpu-usage-${service.containerName}">0%</span></p>
-                                <div class="chart-container">
-                                    <canvas id="cpu-chart-${service.containerName}"></canvas>
+                                <div class="stat-block">
+                                    <p><strong>CPU :</strong> <span id="cpu-usage-${service.containerName}">0%</span></p>
+                                    <div class="chart-container">
+                                        <canvas id="cpu-chart-${service.containerName}"></canvas>
+                                    </div>
                                 </div>
-                                <p><strong>RAM :</strong> <span id="ram-usage-${service.containerName}">0 MB</span></p>
-                                <div class="chart-container">
-                                    <canvas id="ram-chart-${service.containerName}"></canvas>
+                                <div class="stat-block">
+                                    <p><strong>RAM :</strong> <span id="ram-usage-${service.containerName}">0 MB</span></p>
+                                    <div class="chart-container">
+                                        <canvas id="ram-chart-${service.containerName}"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>`;
 
                         serviceList.appendChild(serviceItem);
 
-                        // Initialize charts for each service
-                        charts[`cpu-${service.containerName}`] = initializeChart(`cpu-chart-${service.containerName}`, 'CPU Usage (%)', 'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 100);
-                        charts[`ram-${service.containerName}`] = initializeChart(`ram-chart-${service.containerName}`, 'RAM Usage (MB)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000);
+                        charts[`cpu-${service.containerName}`] = initializeChart(`cpu-chart-${service.containerName}`, '', 'rgba(75, 192, 192, 0.2)', 'rgba(75, 192, 192, 1)', 100, false);
+                        charts[`ram-${service.containerName}`] = initializeChart(`ram-chart-${service.containerName}`, '', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 159, 64, 1)', 1000, true);
                     });
                 }
             });
@@ -232,7 +229,7 @@
         }
     });
 
-    function initializeChart(canvasId, label, bgColor, borderColor, maxX) {
+    function initializeChart(canvasId, label, bgColor, borderColor, maxX, isRamChart) {
         const ctx = document.getElementById(canvasId).getContext('2d');
         return new Chart(ctx, {
             type: 'bar',
@@ -253,9 +250,12 @@
                 scales: {
                     x: {
                         beginAtZero: true,
-                        max: maxX,  // Initial max value
+                        max: maxX,
                         ticks: {
-                            precision: 0
+                            precision: 0,
+                            callback: function (value) {
+                                return value;  // No '%' sign for either CPU or RAM now
+                            }
                         }
                     },
                     y: {
@@ -277,26 +277,24 @@
         socket.onmessage = function (event) {
             const message = event.data;
             const parts = message.split(": ");
-            if (parts.length !== 2) return; // Invalid message format
+            if (parts.length !== 2) return;
 
-            const identifier = parts[0]; // Either container name or worker node IP
+            const identifier = parts[0];
             const stats = parts[1].split(", ");
-            if (stats.length !== 2) return; // Invalid stats format
+            if (stats.length !== 2) return;
 
             const cpu = parseFloat(stats[0].split(" ")[1]);
             const ram = parseFloat(stats[1].split(" ")[1]);
 
-            // Update CPU chart
             const cpuChartKey = `cpu-${identifier}`;
             if (charts[cpuChartKey]) {
-                updateChart(cpuChartKey, cpu, 10); // Set initial maxX to 10
+                updateChart(cpuChartKey, cpu, 10);
                 document.getElementById(`cpu-usage-${identifier}`).innerText = `${cpu}%`;
             }
 
-            // Update RAM chart
             const ramChartKey = `ram-${identifier}`;
             if (charts[ramChartKey]) {
-                updateChart(ramChartKey, ram, 1000); // Set initial maxX to 1000
+                updateChart(ramChartKey, ram, 1000);
                 document.getElementById(`ram-usage-${identifier}`).innerText = `${ram} MB`;
             }
         };
@@ -310,10 +308,9 @@
         const chart = charts[chartKey];
         if (!chart) return;
 
-        // Dynamically adjust the X axis max if needed
         if (value > chart.options.scales.x.max) {
-            chart.options.scales.x.max = Math.ceil(value / 10) * 10; // Increase max to the next multiple of 10
-            chart.update('none'); // Update without animation
+            chart.options.scales.x.max = Math.ceil(value / 10) * 10;
+            chart.update('none');
         }
 
         chart.data.datasets[0].data[0] = value;
@@ -333,15 +330,10 @@
     })
 
     function openWebTerminal(workerNodeIp) {
-
-        // If a terminal already exists, clear the previous content
         if (term) {
-            term.dispose(); // Clear previous terminal content
+            term.dispose();
         }
 
-        // Show popup
-
-        // Initialize terminal
         term = new Terminal();
 
         const socket = new WebSocket(`wss://gitmazon.com/terminal?ip=${workerNodeIp}`);
@@ -353,11 +345,10 @@
         socket.onmessage = (event) => {
             term.write(event.data);
 
-            // Close the popup when receiving the exit command
             if (event.data.includes('logout')) {
                 socket.close();
                 modal.hide();
-                term.dispose(); // Clear terminal content
+                term.dispose();
             }
         };
 
