@@ -149,10 +149,10 @@
                     <a class="nav-link" href="index.html">首頁</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#" id="registerServiceLink">註冊服務</a>
+                    <a class="nav-link" href="registerService.html" id="registerServiceLink">註冊服務</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#" id="myServiceLink">我的服務</a>
+                    <a class="nav-link" href="services.html" id="myServiceLink">我的服務</a>
                 </li>
             </ul>
             <div class="dropdown ms-auto" id="navbarDropdown" style="display: none;">
@@ -272,13 +272,13 @@
                     const userData = await response.json();
                     const username = userData.username;
                     document.getElementById('navbarUsername').innerText = username;
-                    document.getElementById("myServiceLink").href = `services.html?username=${username}`;
+                    document.getElementById("myServiceLink").href = `services.html`;
                     loginButton.style.display = 'none';
                     navbarDropdown.style.display = 'block';
 
                     if (loginOrServiceButton) {
                         loginOrServiceButton.innerText = '我的服務';
-                        loginOrServiceButton.href = `services.html?username=${username}`;
+                        loginOrServiceButton.href = `services.html`;
                         loginOrServiceButton.style.display = 'inline-block';
                     }
                 } else {
