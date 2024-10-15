@@ -293,20 +293,17 @@
                                 );
                             }
 
-                            // 改變箭頭方向
                             const arrowIcon = serviceItem.querySelector('.arrow-icon');
                             arrowIcon.classList.remove('collapsed');
                             arrowIcon.classList.add('expanded');
                         });
 
                         collapseElement.addEventListener('hidden.bs.collapse', function () {
-                            // 恢復箭頭方向
                             const arrowIcon = serviceItem.querySelector('.arrow-icon');
                             arrowIcon.classList.remove('expanded');
                             arrowIcon.classList.add('collapsed');
                         });
 
-                        // 防止點擊連結時觸發折疊
                         const serviceUrl = serviceItem.querySelector('a');
                         serviceUrl.addEventListener('click', function (event) {
                             event.stopPropagation();

@@ -112,6 +112,7 @@
         .service-buttons {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .service-buttons button {
@@ -212,6 +213,14 @@
             cursor: pointer;
         }
 
+
+        @media (max-width: 768px) {
+            .service-buttons {
+                flex-direction: column;
+                gap: 5px;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
