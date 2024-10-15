@@ -65,8 +65,14 @@
 
         .service-item .service-header {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             position: relative;
+            width: 100%;
+        }
+
+        .service-item .service-header .collapse-toggle {
+            flex-grow: 1;
         }
 
         .service-item .service-header h5 {
@@ -213,12 +219,30 @@
             cursor: pointer;
         }
 
-
         @media (max-width: 768px) {
-            .service-buttons {
+            .service-item .service-header {
                 flex-direction: column;
-                gap: 5px;
                 align-items: flex-start;
+            }
+
+            .service-item .service-header .collapse-toggle,
+            .service-buttons {
+                width: 100%;
+            }
+
+            .service-buttons {
+                order: 2;
+                margin-top: 10px;
+                justify-content: flex-start;
+            }
+
+            .collapse-toggle {
+                order: 1;
+            }
+
+            .arrow-icon {
+                order: 3;
+                align-self: flex-end;
             }
         }
     </style>
@@ -244,7 +268,6 @@
                     <a class="nav-link" href="services.html" id="serviceLink">我的服務</a>
                 </li>
             </ul>
-            <!-- 登入狀態動態顯示 -->
             <div class="dropdown ms-auto" id="navbarDropdown" style="display: none;">
                 <span id="navbarUsername" class="navbar-text text-light dropdown-toggle" role="button"
                       data-bs-toggle="dropdown" aria-expanded="false">
@@ -322,7 +345,6 @@
         const loginButton = document.getElementById('loginButton');
         const navbarDropdown = document.getElementById('navbarDropdown');
 
-        // Function to check JWT token and redirect if missing or invalid
         const checkJwtToken = async () => {
             if (!jwtToken) {
                 redirectToHomePage();
