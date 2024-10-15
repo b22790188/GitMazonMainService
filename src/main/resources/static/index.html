@@ -157,7 +157,6 @@
                     <a class="nav-link" href="#" id="myServiceLink">我的服務</a>
                 </li>
             </ul>
-            <!-- 登入狀態動態顯示 -->
             <div class="dropdown ms-auto" id="navbarDropdown" style="display: none;">
                 <span id="navbarUsername" class="navbar-text text-light dropdown-toggle" role="button"
                       data-bs-toggle="dropdown" aria-expanded="false">
@@ -178,7 +177,7 @@
 
 <div class="container container-content">
     <h1>歡迎來到 GitMazon</h1>
-    <a href="https://masternode.gitmazon.com/oauth2/authorization/github" class="login-btn">
+    <a id="loginOrServiceButton" href="https://masternode.gitmazon.com/oauth2/authorization/github" class="login-btn">
         使用 GitHub 登入
     </a>
 </div>
@@ -277,6 +276,12 @@
                     document.getElementById("myServiceLink").href = `services.html?username=${userData.username}`;
                     loginButton.style.display = 'none';
                     navbarDropdown.style.display = 'block';
+
+                    const loginOrServiceButton = document.getElementById('loginOrServiceButton');
+                    if (loginOrServiceButton) {
+                        loginOrServiceButton.innerText = '我的服務';
+                        loginOrServiceButton.href = `services.html?username=${userData.username}`;
+                    }
                 } else {
                     localStorage.removeItem('jwtToken');
                     jwtToken = null;
