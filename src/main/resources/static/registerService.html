@@ -150,7 +150,7 @@
                 <div class="mb-3">
                     <label for="serviceName" class="form-label">服務名稱：</label>
                     <input type="text" class="form-control" id="serviceName" name="serviceName" required
-                           pattern="[A-Za-z0-9]+" title="服務名稱只能包含大小寫英文字母及數字">
+                           pattern="[A-Za-z0-9]+" title="服務名稱只能包含大小寫英文字母及數字" maxlength="32">
                 </div>
 
                 <div class="mb-3">
@@ -212,7 +212,6 @@
                 window.location.href = 'index.html';
             }
         } else {
-            // 無 username 也無 JWT Token，重導向登入頁面
             window.location.href = 'index.html';
         }
     });
