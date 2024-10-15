@@ -107,7 +107,6 @@
             text-align: left;
         }
 
-        /* Modal 按鈕樣式 */
         .modal .btn-primary {
             background-color: #333333;
             border: none;
@@ -117,7 +116,6 @@
             background-color: #555555;
         }
 
-        /* 新增的下拉選單樣式 */
         .dropdown-menu {
             min-width: 100px;
             background-color: #212529;
@@ -177,8 +175,7 @@
 
 <div class="container container-content">
     <h1>歡迎來到 GitMazon</h1>
-    <a id="loginOrServiceButton" href="https://masternode.gitmazon.com/oauth2/authorization/github" class="login-btn">
-        使用 GitHub 登入
+    <a id="loginOrServiceButton" href="#" class="login-btn" style="display: none;">
     </a>
 </div>
 
@@ -237,6 +234,7 @@
         const myServiceLink = document.getElementById('myServiceLink');
         const loginButton = document.getElementById('loginButton');
         const navbarDropdown = document.getElementById('navbarDropdown');
+        const loginOrServiceButton = document.getElementById('loginOrServiceButton');
 
         const showLoginModal = () => {
             var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
@@ -272,24 +270,41 @@
 
                 if (response.ok) {
                     const userData = await response.json();
-                    document.getElementById('navbarUsername').innerText = userData.username;
-                    document.getElementById("myServiceLink").href = `services.html?username=${userData.username}`;
+                    const username = userData.username;
+                    document.getElementById('navbarUsername').innerText = username;
+                    document.getElementById("myServiceLink").href = `services.html?username=${username}`;
                     loginButton.style.display = 'none';
                     navbarDropdown.style.display = 'block';
 
-                    const loginOrServiceButton = document.getElementById('loginOrServiceButton');
                     if (loginOrServiceButton) {
                         loginOrServiceButton.innerText = '我的服務';
-                        loginOrServiceButton.href = `services.html?username=${userData.username}`;
+                        loginOrServiceButton.href = `services.html?username=${username}`;
+                        loginOrServiceButton.style.display = 'inline-block';
                     }
                 } else {
                     localStorage.removeItem('jwtToken');
                     jwtToken = null;
+                    if (loginOrServiceButton) {
+                        loginOrServiceButton.innerText = '使用 GitHub 登入';
+                        loginOrServiceButton.href = 'https://masternode.gitmazon.com/oauth2/authorization/github';
+                        loginOrServiceButton.style.display = 'inline-block';
+                    }
                 }
             } catch (error) {
                 localStorage.removeItem('jwtToken');
                 jwtToken = null;
                 console.error('Error fetching user information', error);
+                if (loginOrServiceButton) {
+                    loginOrServiceButton.innerText = '使用 GitHub 登入';
+                    loginOrServiceButton.href = 'https://masternode.gitmazon.com/oauth2/authorization/github';
+                    loginOrServiceButton.style.display = 'inline-block';
+                }
+            }
+        } else {
+            if (loginOrServiceButton) {
+                loginOrServiceButton.innerText = '使用 GitHub 登入';
+                loginOrServiceButton.href = 'https://masternode.gitmazon.com/oauth2/authorization/github';
+                loginOrServiceButton.style.display = 'inline-block';
             }
         }
 
