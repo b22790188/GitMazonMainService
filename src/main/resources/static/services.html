@@ -49,7 +49,6 @@
             transition: box-shadow 0.3s, background-color 0.3s;
             margin-bottom: 10px;
             position: relative;
-            cursor: pointer;
         }
 
         .service-item:hover {
@@ -68,7 +67,6 @@
             display: flex;
             align-items: center;
             position: relative;
-            cursor: pointer;
         }
 
         .service-item .service-header h5 {
@@ -99,6 +97,7 @@
             bottom: 10px;
             right: 10px;
             transition: transform 0.35s ease;
+            cursor: pointer;
         }
 
         .service-item .arrow-icon.collapsed {
@@ -206,6 +205,11 @@
         .dropdown-item:hover, .dropdown-item:focus {
             color: rgba(255, 255, 255, 0.75);
             background-color: transparent;
+        }
+
+        /* Collapse toggle cursor */
+        .collapse-toggle {
+            cursor: pointer;
         }
 
     </style>
@@ -392,18 +396,21 @@
                 serviceItem.classList.add("service-item", "col-12");
 
                 serviceItem.innerHTML = `
-                    <div class="service-header d-flex justify-content-between align-items-center w-100" data-bs-toggle="collapse" data-bs-target="#collapse-${service.containerName}">
-                        <div>
+                    <div class="service-header d-flex justify-content-between align-items-center w-100">
+                        <!-- Collapse Trigger Area -->
+                        <div class="collapse-toggle flex-grow-1" data-bs-toggle="collapse" data-bs-target="#collapse-${service.containerName}">
                             <p><strong>服務名稱:</strong> ${service.serviceName}</p>
                             <p><strong>Repo 名稱:</strong> ${service.repoName}</p>
                             <p><strong>Service URL:</strong> <a href="${service.endpoint}" class="service-url" target="_blank">${service.endpoint}</a></p>
                         </div>
+                        <!-- Buttons (Not triggering collapse) -->
                         <div class="service-buttons">
                             <button class="sshButton" data-username="${service.username}" data-repo-name="${service.repoName}">SSH</button>
                             <button class="unregisterButton" data-username="${service.username}" data-repo-name="${service.repoName}">取消註冊</button>
                             <button class="restartButton" data-username="${service.username}" data-repo-name="${service.repoName}">重啟</button>
                         </div>
-                        <span class="arrow-icon collapsed">&#9660;</span>
+                        <!-- Arrow Icon (Also triggers collapse) -->
+                        <span class="arrow-icon collapsed" data-bs-toggle="collapse" data-bs-target="#collapse-${service.containerName}">&#9660;</span>
                     </div>
                     <div id="collapse-${service.containerName}" class="collapse">
                         <div class="service-details">
@@ -429,26 +436,29 @@
 
                 serviceList.appendChild(serviceItem);
 
-                // Bind buttons and prevent card collapse on link click
+                // Prevent card collapse on link click
                 const serviceUrl = serviceItem.querySelector('.service-url');
                 serviceUrl.addEventListener('click', function (event) {
                     event.stopPropagation();
                     window.open(serviceUrl.href, '_blank');
                 });
 
-                // Bind other buttons as necessary
+                // Bind buttons and prevent collapse on button click
+                serviceItem.querySelectorAll(".service-buttons button").forEach(button => {
+                    button.addEventListener("click", function (event) {
+                        event.stopPropagation();
+                    });
+                });
+
                 serviceItem.querySelector(".sshButton").addEventListener("click", function (event) {
-                    event.stopPropagation();
                     openWebTerminal(service.username, service.repoName);
                 });
 
                 serviceItem.querySelector(".unregisterButton").addEventListener("click", function (event) {
-                    event.stopPropagation();
                     unregisterService(service.username, service.repoName);
                 });
 
                 serviceItem.querySelector(".restartButton").addEventListener("click", function (event) {
-                    event.stopPropagation();
                     restartContainer(service.username, service.repoName);
                 });
 
