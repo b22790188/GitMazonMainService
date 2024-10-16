@@ -435,7 +435,7 @@
         socket.onmessage = (event) => {
             term.write(event.data);
 
-            if (event.data.includes('exit')) {
+            if (event.data.includes('logout')) {
                 socket.close();
                 modal.hide();
                 term.dispose();
