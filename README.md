@@ -1,8 +1,10 @@
-
 # GitMazon Main Service
+The main service server is responsible for serving the frontend interface and providing web terminal functionality.
 
-Provided a frontend interface with a web terminal using **pty4j** and **Xterm.js**, transmitting data to users via **WebSocket**.
+# Technique
 
+- Implemented a web terminal using **pty4j** and **Xterm.js**, enabling SSH connections for remote access.
+- Provided frontend interface with **HTML**, **CSS**, **JavaScript**
 
 
 
