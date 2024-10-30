@@ -59,14 +59,12 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
 
             log.info("Received Pod Info - IP: " + ip + ", Container: " + container);
 
-            // 建立 SSH 連線
             command = new String[]{
                 "ssh", "-t", "-o", "LogLevel=QUIET", "-i", "~/.ssh/webserver.pem", "ubuntu@" + ip,
                 "sudo docker exec -it " + container + " bash"
             };
         }
 
-        //get data from backend
 
         PtyProcess process = new PtyProcessBuilder(command).start();
         InputStream inputStream = process.getInputStream();
